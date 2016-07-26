@@ -1,0 +1,41 @@
+set term pdf enhanced color 
+set output "bench_scalaire_per_compute.pdf"
+set title "Time per point comparison of different executables"
+set auto x
+set ylabel "µs"
+set grid y
+set style data histogram
+#set style histogram cluster gap 1
+set style fill solid border -1
+set boxwidth 0.9
+set xtic rotate by -45 scale 0
+#
+plot for [COL=2:6] 'scal_compute_per_neptune.dat' using COL:xticlabels(1) ti col
+#
+
+set output "bench_scalaire_per_diag.pdf"
+#set yrange[5.1:5.8]
+#
+plot for [COL=2:6] 'scal_diag_per_neptune.dat' using COL:xticlabels(1) ti col
+
+
+set output "bench_scalaire_time_f_points.pdf"
+
+set title "Time per point=f(nb points)"
+set xlabel "Nb points"
+set ylabel "µs"
+unset style 
+set xtic rotate by 0 scale 0
+set grid x
+#
+plot 'scal_time_f_points' u 1:2 t 'Nemo' w lp ls 2 lw 2 pt 2 ps 1
+
+
+set output "test.pdf"
+set xrange[0:20000000]
+plot 'scal_time_f_points' u 1:($2*$1/1000000) t 'Nemo' w lp ls 2 lw 2 pt 2 ps 1
+replot 0.00000366*x w l ls 3
+
+set logscale y
+set xrange[3:300]
+replot 16*x*x*x*8/1024/1024 ls 4

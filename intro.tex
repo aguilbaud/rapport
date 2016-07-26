@@ -1,0 +1,39 @@
+\section*{Introduction}\addcontentsline{toc}{section}{Introduction}
+\subsection*{Le CERFACS}\label{sec:intro}
+
+Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille avec ses associés (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifique et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée.
+
+
+Le personnel du Cerfacs est divisée en équipes:
+\begin{itemize}
+\item Algorithmes parallèles
+\item Aviation \& environnement
+\item Informatique et Support Utilisateur (CSG)
+\item Modélisation du climat
+\item Mécanique des fluides (CFD)
+\end{itemize}
+
+\paragraph{}L'équipe CFD (Computational Fluid Dynamics) est la plus grosse équipe du Cerfacs et c'est en son sein que j'ai réalisé mon stage. Elle se concentre sur le développement de méthodes numériques permettant la simulation des écoulements et les applique aux avions, fusées, moteurs, turbines, etc. Parmis les codes développés par cette équipe, on peut trouver\cite{cerfacs}:
+\begin{itemize}
+\item AVBP: code parallèle de CFD basé sur l'approche LES (Large Eddy Simulation : simulations aux grandes échelles)
+\item NTMIX: solveur d'écoulements réactifs bassée sur l'approche DNS (Direct Numerical Simulation)
+\item NTMIX\_CHEMKIN: version de NTMIX intégrant la chimie complexe 
+\end{itemize}
+
+
+\paragraph{}Durant mon stage, je travaillerais sur NTMIX\_CHEMKIN, présenté ci-dessous.
+
+
+\subsection*{NTMIX\_CHEMKIN}
+NTMIX\_CHEMKIN est un solveur d'écoulements réactifs (``écoulements dans lesquels il y a des réactions chimiques'')en 2D s'appuyant sur une approche DNS (Direct Numerical Simulation). Il est couplé avec la librairie CHEMKIN qui permet la simulation de la chimie complexe. Ce code est utilisé pour étudier la structure chimique des flammes et leur comportement en présence d'un écoulement dynamique (combustion turbulente).\cite{cerfacs}
+
+\paragraph{}
+Une simulation numérique directe (DNS: Direct Numerical Simulation) est une simulation dans laquelle les équations de Navier-Strokes (équations décrivant le mouvement des fluides visqueux) sont résolues numériquement sans aucun modèle de turbulence. Cependant, le coût d'une telle simulation est très élevé. Il est actuellement impossible de résoudre des problèmes industriels avec ce type de simulation. Elle présente cependant un intérêt en recherche fondamentale. Grâce à la DNS, il est possible de faire des ``expériences numériques''\cite{cfd-online-DNS} et d'en extraire des informations difficilement récupérables en laboratoire.
+
+
+\subsection*{Objectifs}
+L'objectif de ce stage est de développer une version 3D de NTMIX\_CHEMKIN.
+
+\paragraph{}Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autre méthodes de simulation.
+
+\paragraph{}Comme vu précedemment, une simulation DNS n'utilise pas de modèle de turbulence. Un tel code de simulation possède donc un coût élevé et il sera donc nécessaire de parallèliser la version 3D de NTMIX\_CHEMIN.

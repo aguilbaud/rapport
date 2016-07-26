@@ -1,0 +1,85 @@
+\documentclass{article}
+\usepackage[francais]{babel}
+\usepackage[utf8]{inputenc}  
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{float}
+\usepackage{algorithm}
+
+
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{amsfonts}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{listings}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{ 
+  language=fortran,
+  backgroundcolor=\color{backcolour},   
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  keepspaces=true,                
+  keywordstyle=\color{blue},       % keyword style
+  otherkeywords={*,...},           % if you want to add more keywords to the set
+  numbers=left,                   
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{gray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},        
+  showspaces=false,               
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,	                   % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+\makeatletter
+\renewcommand\thesection{}
+\renewcommand\thesubsection{\@arabic\c@section.\@arabic\c@subsection}
+
+\makeatother
+
+
+\addto\captionsfrench{\def\refname{Bibliographie}}
+\begin{document}
+
+\include{title}
+\null\cleardoublepage
+\include{resume}
+\null\cleardoublepage
+\include{remerciements}
+\null\cleardoublepage
+\tableofcontents
+\null\clearpage
+
+\listoffigures  % table des figures
+\listoftables   % table des tableaux
+\null\cleardoublepage
+\include{intro}
+\cleardoublepage
+\include{part1}
+\cleardoublepage
+\include{part2}
+\cleardoublepage
+\include{conclu}
+
+\appendix
+
+\include{annexe}
+\addcontentsline{toc}{section}{Bibliographie}
+\bibliographystyle{unsrt}
+\bibliography{biblio}
+\end{document}
