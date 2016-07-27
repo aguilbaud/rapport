@@ -1,12 +1,12 @@
-\section{Partie 1: Migration de NTMIX en Fortran 90}
+\section{Partie 1: Migration de NTMIX en Fortran 90 et développement d'une version 3D}
 
-Avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû moderniser le code. En effet, NTMIX a été développé en Fortran 77 ce qui ne permettait pas l'allocation dynamique de tableau; l'ensemble des variables étaient allouées de manière statique. Pour résoudre ce problème et permettre plus de flexibilité, il m'a été demandé de migrer le code du standard Fortran 77 au standard Fortran 90.
+Avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû moderniser le code. En effet, NTMIX a été développé en Fortran 77 ce qui ne permettait pas l'allocation dynamique de tableau; l'ensemble des variables étaient allouées de manière statique ce qui augmentait grandement la taille de l'executable. Pour résoudre ce problème et permettre plus de flexibilité, il m'a été demandé de migrer le code du standard Fortran 77 au standard Fortran 90.
 % Le programme devait donc être entièrement recompilé à chaque changement de la taille du maillage.
 
 \subsection{Migration de NTMIX}
 \subsubsection{Travail réalisé}
 
-\paragraph{Réécriture de code}Cette partie consistait donc à réécrire le code dans une norme plus récente. Une majorité des modifications était liée à la syntaxe du code. Pour rendre la tâche plus aisée, j'ai utilisé des expressions régulières; ce sont des séquences de caractères qui définissent des motifs de recherche et qui sont particulièrement utiles pour remplacer un motif par un autre. Par exemple, la figure \ref{fig:regex} montre une expression utilisée pour modifier les commentaires dans le code; ils sont très nombreux et on peut donc automatiser la tâche. En Fortran 77, le C ou c placé en début de ligne indique le début d'un commentaire mais en Fortran 90 c'est un ! qui a cet usage.
+\paragraph{Réécriture de code}Cette partie consistait donc à réécrire le code dans une norme plus récente. Une majorité des modifications était liée à la syntaxe du code. Pour rendre la tâche plus aisée, j'ai utilisé des expressions régulières; ce sont des séquences de caractères qui définissent des motifs de recherche et qui sont particulièrement utiles pour remplacer un motif par un autre. Par exemple, en Fortran 77, le C ou c placé en début de ligne indique le début d'un commentaire mais en Fortran 90 c'est un ! qui a cet usage. La figure \ref{fig:regex} montre une expression utilisée pour modifier ces commentaires dans le code; ils sont très nombreux et on peut donc automatiser la tâche. 
 
 \begin{figure}[ht]
   \centering
@@ -24,7 +24,7 @@ Avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû
 \begin{figure}[ht]
   \centering
   \includegraphics[scale=0.3]{figures/vertex.png}
-  \caption{\label{fig:visu}Exemple de visualisation - ParaView}
+  \caption{\label{fig:visu}Exemple de visualisation - ParaView TODO:THI}
 \end{figure}
 
 %\begin{itemize}
@@ -38,34 +38,36 @@ Avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû
 
 \subsubsection{Validation}Pour vérifier que les modifications réalisées ne changeaient pas le comportement du programme, j'ai écrit un script permettant de comparer les résultats fournis par ma version avec ceux du programme initial. NTMIX lit la configuration physique de la simulation depuis des fichiers d'entrée. Le script génère donc ces fichiers avec plusieurs configuration, lance la version initiale, la version en cours de développement puis compare les solutions calculées par ceux-ci.
 
+\paragraph{}J'ai également utilisé Valgrind, un outil permettant notamment d'analyser la mémoire d'un programme afin de vérifier que la mémoire allouée dynamiquement était toujours désallouée, évitant ainsi l'apparition de fuites mémoire (pouvant entrainer une saturation de la mémoire de la machine ainsi qu'un plantage du code).
+
 
 
 
 \subsection{Passage en 3D}
 
 \subsubsection{Méthode}\label{sec:3dmeth}
-Dans cette partie, je me suis intéressé au passage de l'application en 3 dimensions. Pour minimiser les erreurs pouvant être induites par ce changement, j'ai modifié le code par petits blocs. Une grande partie des variables conservatives (densité, vitesses, énergie..) sont stockées dans un seul tableau et des pointeurs viennent délimiter ce tableau en sous-tableaux (fig. \ref{fig:array_2d}). Ces pointeurs représentaient tous des tableaux 2D. J'ai donc dans un premier temps modifié la taille du grand tableau pour qu'il puisse contenir la dimension supplémentaire mais en laissant les pointeurs aux bon emplacements et j'ai ajouté des tableaux 3D, qui n'étaient pas encore utilisés à ce moment-là. A partir de là, j'ai remplacé progressivement les tableaux 2D par les tableaux 3D en vérifiant que les résultats restaient identiques au fur et à mesure. Cette méthode m'a donc permis de réduire le risque d'erreurs au maximum.
+Dans cette partie, je me suis intéressé au passage de l'application en 3 dimensions. Pour minimiser les erreurs pouvant être induites par ce changement, j'ai modifié le code par petits blocs. Une grande partie des variables conservatives (densité, vitesses, énergie..) sont stockées dans un seul tableau et des pointeurs viennent délimiter ce tableau en sous-tableaux (fig. \ref{fig:array_2d}). Ces pointeurs représentaient tous des tableaux 2D. J'ai donc dans un premier temps modifié la taille du grand tableau pour qu'il puisse contenir la dimension supplémentaire mais en laissant les pointeurs aux bons emplacements et j'ai ajouté des tableaux 3D, qui n'étaient pas encore utilisés à ce moment-là. A partir de là, j'ai remplacé progressivement les tableaux 2D par les tableaux 3D en vérifiant que les résultats restaient identiques au fur et à mesure. Cette méthode m'a donc permis de réduire le risque d'erreurs au maximum.
 
-\paragraph{}Après avoir réalisé ces modifications, je me suis intéressé aux calculs des dérivées. Ces dérivées permettent de modifier l'état de la simulation. Maintenant que NTMIX était en 3D, il fallait.
+\paragraph{Calcul des gradients}Après avoir réalisé ces modifications, je me suis intéressé aux calculs des gradients. Ils indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'il prennent en compte tout l'espace.
 
-\paragraph{}NSCBC(Navier-Strokes Characteristic Boundary Conditions) demander à bénédicte une explication (waves ?) \cite{POINSOT1992104}
+\paragraph{Conditions limites}Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numérique qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Pour palier à ce problème, la méthode NSCBC(Navier-Strokes Characteristic Boundary Conditions) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
 
-\paragraph{}Plusieurs parties du code prévoyait déjà le passage du code en 3 dimensions, ainsi la préparation du calcul des dérivées était présente et a facilité le travail. La librairie CHEMKIN est adimensionnée ce qui permet d'ajouter une dimension sans avoir à modifier les fonctions de celle-ci.
+\paragraph{}Plusieurs parties du code prévoyait déjà le passage du code en 3 dimensions, ainsi la préparation des tableaux utilisés pour le calcul des gradient était présente et a facilité le travail. La librairie CHEMKIN est adimensionnée ce qui a permis d'ajouter une dimension sans avoir à modifier ses fonctions.
 
-\begin{itemize}
-\item Changement de la taille des tableaux
-\item Ajout de la vitesse sur l'axe Z
-\item Ajout des conditions limites sur Z
-\item Modification du calcul des dérivées
-\item Modification du calcul de l'énergie cinétique: $\rho_e = \rho\frac{1}{2}(u^2+v^2+w^2)$
-\end{itemize}
+%\begin{itemize}
+%\item Changement de la taille des tableaux
+%\item Ajout de la vitesse sur l'axe Z
+%\item Ajout des conditions limites sur Z
+%\item Modification du calcul des dérivées
+%\item Modification du calcul de l'énergie cinétique: $\rho_e = \rho\frac{1}{2}(u^2+v^2+w^2)$
+%\end{itemize}
 
 \subsubsection{Validation}
 Comme dit dans précedemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant une dimension nulle ce qui m'a permis de comparer les résultats avec la version 2D. J'ai ensuite mis en place plusieurs tests 3D permettant de valider les calculs réalisés par le programme:
 
 \begin{itemize}
 \item Écoulements uniformes: un flux uniforme traverse le domaine selon un axe; le flux étant constant, les dérivées doivent rester nulles et les vitesses ne doivent pas varier
-\item Front de flamme(expliquer):
+\item Un front de flamme est une zone dans laquelle se déroule la combustion:
   \begin{itemize}
   \item Vitesse nulle: le front de flamme doit rester statique et un phénomène de diffusion doit être observé (mouvement de molécules d'une région de haute concentration vers une région de faible concentration)
   \item Vitesse non-nulle: en plus du phénomène de diffusion, la convection doit également apparaitre (mouvement de groupe de molécules au sein d'un fluide)
@@ -83,29 +85,70 @@ Comme dit précédemment, les dérivées doivent être nulles dans ce cas, la si
 \end{figure}
 
 \paragraph{Front de flamme}
-Dans ce cas, le front de flamme est modélisé, au temps $t_0$, par une gaussienne centrée en $x_0$: $f(x,t_0)=e^{\frac{-(x-x_0)^2}{\sigma^2}}$ que nous avons simplifiée en $e^{-(x^2)}$. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{fr}$.
+Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimique et la concentration d'une espèce est modélisée par une gaussienne centrée simplifiée en $e^{-(x^2)}$ et l'autre par $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration de 1 en tout point du domaine. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{f}$. Sur la figure \ref{fig:diff}, nous pouvons observer en bleue la valeur initiale d'une espèce, en vert sa valeur au temps $t$ de la simulation et en rouge la valeur théorique.
 
-\begin{figure}[ht]
+% $f(x,t_0)=e^{\frac{-(x-x_0)^2}{\sigma^2}}$
+%\begin{figure}[ht]
+%  \centering
+%  \includegraphics[scale=0.15]{figures/diff.png}
+%  \caption{\label{fig:diff} }
+%\end{figure}
+
+\begin{figure}[t!]
   \centering
-  \includegraphics[scale=0.15]{figures/diff.png}
-  \caption{\label{fig:diff} }
-\end{figure}
-
-
-
-\begin{figure}	
-  \centering
-  \begin{minipage}{.5\textwidth}
+  \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[width=.9\linewidth]{figures/diff_0.png}
-    \caption{\label{fig:diff_0}Caption 2}
-  \end{minipage}%
-  \begin{minipage}{.5\textwidth}
+    \includegraphics[width=.9\linewidth]{figures/diff.png}
+    \caption{\label{fig:diff_0}Valeur x $t_0$}
+  \end{subfigure}%
+  ~ 
+  \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \includegraphics[width=.9\linewidth]{figures/diff_325.png}
-    \caption{\label{fig:diff_325}Caption 2}
-  \end{minipage}
+    \caption{\label{fig:diff_325}Valeur x $t$}
+  \end{subfigure}
+  \caption{Caption place holder}
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[width=.9\linewidth]{figures/diff_0.png}
+    \caption{\label{fig:diff_0_domain}Valeur x $t_0$ - Domaine complet}
+  \end{subfigure}%
+  ~ 
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[width=.9\linewidth]{figures/diff_325.png}
+    \caption{\label{fig:diff_325_domain}Valeur x $t$ - Domaine complet}
+  \end{subfigure}
+  \caption{\label{fig:diff_}Diffusion}
 \end{figure}
+
+
+%\begin{figure}[ht]	
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/diff.png}
+%    \caption{\label{fig:diff_0}Valeur x $t_0$}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/diff_325.png}
+%    \caption{\label{fig:diff_325}Valeur x $t$}
+%  \end{minipage}
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/diff_0.png}
+%    \caption{\label{fig:diff_0_domain}Valeur x $t_0$ - Domaine complet}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/diff_325.png}
+%    \caption{\label{fig:diff_325_domain}Valeur x $t$ - Domaine complet}
+%  \end{minipage}
+%  \caption{\label{fig:diff_}Diffusion}
+%\end{figure}
 
 
 \paragraph{Turbulence homogène isotrope}

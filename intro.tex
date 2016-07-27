@@ -36,4 +36,4 @@ L'objectif de ce stage est de développer une version 3D de NTMIX\_CHEMKIN.
 
 \paragraph{}Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autre méthodes de simulation.
 
-\paragraph{}Comme vu précedemment, une simulation DNS n'utilise pas de modèle de turbulence. Un tel code de simulation possède donc un coût élevé et il sera donc nécessaire de parallèliser la version 3D de NTMIX\_CHEMIN.
+\paragraph{}Comme vu précedemment, une simulation DNS n'utilise pas de modèle de turbulence. Un tel code de simulation possède donc un coût élevé et il sera nécessaire de parallèliser la version 3D de NTMIX\_CHEMIN pour permettre au code de tourner sur de grand maillage ($\approx 10^9$ points) en un temps raisonnable.
