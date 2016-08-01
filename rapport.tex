@@ -6,7 +6,8 @@
 \usepackage{color}
 \usepackage{float}
 \usepackage{algorithm}
-
+\usepackage{algorithmic}
+\usepackage{caption}
 
 \usepackage{array}
 \usepackage{colortbl}
@@ -16,6 +17,9 @@
 \usepackage{hyperref}
 \usepackage{subcaption}
 \usepackage{listings}
+
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -73,6 +77,8 @@
 \include{part1}
 \cleardoublepage
 \include{part2}
+\cleardoublepage
+\include{part3}
 \cleardoublepage
 \include{conclu}
 
