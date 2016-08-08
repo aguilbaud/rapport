@@ -1,3 +1,10 @@
 \section{Annexe A}
 \subsection{xxx}
 \section{Annexe B}
+
+\section{Modifications du traitements des bordures}
+LEs subroutines bc\_x, bc\_y et bc\_z stockaient les plans des bordures selon leur directions respectives. Dans le cas parallèle, un processus ne possédent pas forcément les 2 plans frontières. Ces routines ont donc été modifiées avent de traiter un seul plan et ce grace un argument qui y a été rajouté.
+
+L'appel à ces fonctions dépend donc maintenant de la position du processus sur la grille cartésienne.
+
+
