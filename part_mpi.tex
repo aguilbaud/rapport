@@ -38,10 +38,11 @@ Dans le cas de NTMIX, il y a 2 cas différents pour la décomposition d'un domai
 
 
 \subsection{Recouvrement de domaine}
-Cependant, chaque processus ne peut pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs. Une telle méthode implique que le gradient en un point est dépendant des valeurs de tous les autres points du champ. Comme on peut le voir sur la figure \ref{fig:depdom}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs. Concrètement, les sous-domaines devront s'échanger les données présentes sur leurs bordures. Pour cela, je testerai 2 méthodes avant de comparer leurs performances respectives.
+Cependant, chaque processus ne peut pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs. Une telle méthode implique que le gradient en un point est dépendant des valeurs de tous les autres points du champ. Comme on peut le voir sur la figure \ref{fig:depdom}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs. Concrètement, les sous-domaines devront s'échanger les données présentes sur leurs bordures. 
+%Pour cela, je testerai 2 méthodes avant de comparer leurs performances respectives.
 
-\paragraph{Méthode avec cellules fantômes}
- Avec MPI, des communications devront se faire pour échanger ces données. Cette première méthode consistera à réduire au maximum le nombre de ces communications. Pour cela, j'ai agrandi les sous-domaines en ajoutant des cases qui seront destinées au stockage d'une copie des données des domaines adjacents. Ces cases, appelées ``cellules fantômes'', sont représentées en gris sur la figure \ref{fig:depdomover} (ici la zone d'overlapping est représentée par une seule case pour la clarté du schéma mais la taille de cette zone peut varier).
+%\paragraph{Méthode avec cellules fantômes}
+ \paragraph{}Avec MPI, des communications devront se faire pour échanger ces données et il est nécessaire de réduire au maximum leur nombre. Pour cela, j'ai agrandi les sous-domaines en ajoutant des cases qui seront destinées au stockage d'une copie des données des domaines adjacents. Ces cases, appelées ``cellules fantômes'', sont représentées en gris sur la figure \ref{fig:depdomover} (ici la zone d'overlapping est représentée par une seule case pour la clarté du schéma mais la taille de cette zone peut varier).
 Cette méthode permet donc de limiter le nombre de communications entre les processus mais des calculs sont répliqués sur plusieurs processus; en effet les points contenus dans les zones grisées subiront les calculs permettant de préparer les variables avant le calcul des gradients 2 fois.
 
 
@@ -63,8 +64,8 @@ Cette méthode permet donc de limiter le nombre de communications entre les proc
 \end{figure}
 
 
-\paragraph{Méthode sans réplication de calcul}
-La seconde méthode consiste à ne pas répliquer les calculs sur plusieurs sous-domaines. Pour cela, les zones d'overlapping ne sont donc pas créées et les échanges de données se font seulement au moment du calcul des gradients. Les sous-domaines reçoivent ainsi les données nécessaires quand ils en ont besoin. Cette méthode réduit donc les calculs réalisés par chacun des sous-domaines mais augmente grandement la quantité de communications.
+%\paragraph{Méthode sans réplication de calcul}
+%La seconde méthode consiste à ne pas répliquer les calculs sur plusieurs sous-domaines. Pour cela, les zones d'overlapping ne sont donc pas créées et les échanges de données se font seulement au moment du calcul des gradients. Les sous-domaines reçoivent ainsi les données nécessaires quand ils en ont besoin. Cette méthode réduit donc les calculs réalisés par chacun des sous-domaines mais augmente grandement la quantité de communications.
 
 %\paragraph{}J'ai donc ajouter ces méthodes au programme pour pouvoir comparer leurs performances respectives. La première méthode a l'avantage de reduire la fréquence des communications en dupliquant des calculs sur plusieurs processus (augmentant donc le côut de ceux-ci).
 
@@ -74,19 +75,18 @@ La seconde méthode consiste à ne pas répliquer les calculs sur plusieurs sous
 
 \subsubsection{Calcul du pas de temps}
 Dans la version séquentielle de NTMIX, un pas de temps maximum, permettant de garantir la stabilité de la simulation, est calculé sur l'ensemble du domaine.
-Dans la version parallèle, chaque sous-domaine calcul donc un pas de temps maximal et une opération de réduction est utilisée pour trouver le minimum global. Elle permet de trouver le pas de temps minimal entre tous les sous-domaine et de le distribuer sur tous les processus.
+Dans la version parallèle, chaque sous-domaine calcul donc son pas de temps maximal et une opération de réduction est utilisée pour trouver le minimum global. Elle permet de trouver le pas de temps minimal entre tous les sous-domaine et de le distribuer sur tous les processus.
 
 %\paragraph{}Dans la version séquentielle, un pas de temps maximal est calculé dans le but d'assurer la stabilité de l'algorithme. Ce calcul est donc dépendant de l'ensemble du domaine. Dans la version parallèle, chaque processus devra donc calculer le pas de temps maximal de son sous-domaine et le communiquer aux autres afin de trouver le pas de temps global (opération de réduction).
 
-\subsubsection{Transfert des données nécessaires au calcul des gradients}
-MPI fournit un ensemble de fonctions permettant les communications entre les processus. Je présenterai ici 
-TODO
+\subsubsection{Transfert des cellules fantômes}
 
-Les 2 méthodes permettant le transfert des données entre les sous-domaines présentées dans la section précédente impliquent des communications différentes; autant dans la quantité de données échangées et dans 
 
-\paragraph{Transfert des cellules fantômes}
+%Les 2 méthodes permettant le transfert des données entre les sous-domaines présentées dans la section précédente impliquent des communications différentes; autant dans la quantité de données échangées et dans 
+
+
 Du fait de la discrétisation du temps dans la simulation, une méthode de Runge-Kutta est utilisée pour approximer les solutions permettant l'évolution des différentes variables au cours du temps. C'est une méthode itérative; une première estimation de la solution est utilisée pour calculer une seconde estimation plus précise, et ainsi de suite (cite wikipedia). Dans NTMIX, 3 itérations sont réalisées à chaque pas de temps.
-Il est donc nécessaire que les transferts des zones d'overlapping se fassent avant chaque appel à ces itérations afin que le calcul de l'intégration puisse se faire. Pour cela, j'ai créé une fonction update qui est appellée avant chaque appel à une itération de RHS (algo \ref{algo:time_step}).
+Il est donc nécessaire que les transferts des zones d'overlapping se fassent avant chaque appel à ces itérations afin que le calcul de l'intégration puisse se faire. Pour cela, j'ai créé une fonction update qui est appellée avant chaque itération de RHS (algo \ref{algo:time_step}).
 %Dans RHS, toutes les variables conservatives subissent le calcul. 
 
 \begin{algorithm}
@@ -106,33 +106,8 @@ Il est donc nécessaire que les transferts des zones d'overlapping se fassent av
 \end{algorithm}
 
 
-La figure \ref{fig:comms} représente, avec les flèches rouges, les communications devant se faire entre les processus. MPI fournit une fonction permettant de réaliser ce type de communication; MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction s'occupe elle-même d'envoyer la bonne partie du buffer au bon voisin selon leur disposition sur la grille cartésienne. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
 
-
-
-\begin{figure}[h!]
-  \centering
-  \includegraphics[scale=0.15]{figures/domain-overlap-comms.png}
-  \caption{\label{fig:comms} }
-\end{figure}
-
-%Je m'intéresse ici aux méthodes de communications utilisées dans la première méthode présentée ci-dessus. En effet la seconde méthode d'overlapping n'induit qu'au plus 2 communications par processus par calcul de gradients et ne pose donc pas de problèmes particuliers. En revanche, pour la première méthode il faut effectuer au plus 2x3 communications par appel à la fonction update Sur la figure \ref{fig:neighbor_buf}, on peut voir en orange les ``cellules fantômes'' qui recevront les valeurs voisines et en vert les valeurs qui seront envoyées aux processus voisins. J'ai testé plusieurs de communications pour comparer leurs performance. J'ai dans un premier temps utilisé la fonction MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction s'occupe elle-même d'envoyer la bonne partie du buffer au bon voisin selon leur disposition sur la grille cartésienne. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
-
-
-\begin{figure}[h!]
-  \centering
-  \includegraphics[scale=0.3]{figures/neighbor_pos.png}
-  \caption{\label{fig:neighbor_pos}Positions des valeurs des voisins}
-\end{figure}
-
-\paragraph{}Cependant cette fonction est relativement récente et peut ne pas être disponible dans les implémentation de MPI présentes sur certain calculateur qui seront utilisé. Il m'a donc été demandé d'implémenter une seconde méthode dans un soucis de portabilité. C'est une implémentation triviale de la fonction MPI\_Neighbor\_alltoallv; on parcourt les dimensions du domaines, et pour chaque dimensions, on effectue 2 envois et 2 réceptions.
-
-\paragraph{}Le coût d'une telle méthode ne se résume donc pas simplement aux coûts de communications mais aussi aux nombreuses copies réalisées pour créer le buffer d'envoi et pour ``éclater'' le buffer de réception. Ce coût sera donc étudié dans la partie suivante.
-
-\paragraph{Seconde méthode}
-C'est dans la fonction RHS que les calculs de gradient sont réalisés. Il existe plusieurs méthodes de dérivations selon les propriétés physiques du domaine. C'est dans ses fonctions de dérivations que les communications sont réalisées. Pour chaque méthode de dérivation, il existe 3 fonctions permettant la dérivation sur les 3 axes du domaine. Ces fonctions reçoivent en entrée les valeurs du champ devant être dérivé. Contrairement à la méthode précédente, les communications transmettront moins de donnée (1 seule variable conservative à la fois ici contre les 5 variables plus les espèces dans la première méthode). 
-
-Il est donc possible de savoir, selon la fonction utilisée, avec quels voisins les communications se feront; par exemple, si la dérivée se fait sur l'axe X (fig. \ref{fig:comm_dim1}), le processus devra réaliser 2 envois et 2 réceptions dans cette direction.  TODO point2point comms
+Chaque processus doit envoyer ses bordures à tous ses voisins dans la topologie virtuelle (fig. \ref{fig:comm}). MPI fournit une fonction permettant de réaliser ce type de communication; MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction s'occupe elle-même d'envoyer la bonne partie du buffer au bon voisin selon leur disposition sur la topologie. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
 
 \begin{figure}[h!]
   \centering
@@ -149,6 +124,32 @@ Il est donc possible de savoir, selon la fonction utilisée, avec quels voisins 
   \end{subfigure}
   \caption{\label{fig:comm}Communications}
 \end{figure}
+
+%\begin{figure}[h!]
+%  \centering
+%  \includegraphics[scale=0.15]{figures/domain-overlap-comms.png}
+%  \caption{\label{fig:comms} }
+%\end{figure}
+
+%Je m'intéresse ici aux méthodes de communications utilisées dans la première méthode présentée ci-dessus. En effet la seconde méthode d'overlapping n'induit qu'au plus 2 communications par processus par calcul de gradients et ne pose donc pas de problèmes particuliers. En revanche, pour la première méthode il faut effectuer au plus 2x3 communications par appel à la fonction update Sur la figure \ref{fig:neighbor_buf}, on peut voir en orange les ``cellules fantômes'' qui recevront les valeurs voisines et en vert les valeurs qui seront envoyées aux processus voisins. J'ai testé plusieurs de communications pour comparer leurs performance. J'ai dans un premier temps utilisé la fonction MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction s'occupe elle-même d'envoyer la bonne partie du buffer au bon voisin selon leur disposition sur la grille cartésienne. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
+
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[scale=0.3]{figures/neighbor_pos.png}
+  \caption{\label{fig:neighbor_pos}Positions des valeurs des voisins}
+\end{figure}
+
+\paragraph{}Cependant cette fonction est relativement récente et peut ne pas être disponible dans les implémentation de MPI présentes sur certain calculateur qui seront utilisé. Il m'a donc été demandé d'implémenter une seconde méthode dans un soucis de portabilité. C'est une implémentation triviale de la fonction MPI\_Neighbor\_alltoallv; on parcourt les dimensions du domaine, et pour chaque dimension, on effectue 2 envois et 2 réceptions dans la direction correspondant à cette dimension.
+
+%\paragraph{}Le coût d'une telle méthode ne se résume donc pas simplement aux coûts de communications mais aussi aux nombreuses copies réalisées pour créer le buffer d'envoi et pour ``éclater'' le buffer de réception. Ce coût sera donc étudié dans la partie suivante.
+
+%\paragraph{Seconde méthode}
+%C'est dans la fonction RHS que les calculs de gradient sont réalisés. Il existe plusieurs méthodes de dérivations selon les propriétés physiques du domaine. C'est dans ses fonctions de dérivations que les communications sont réalisées. Pour chaque méthode de dérivation, il existe 3 fonctions permettant la dérivation sur les 3 axes du domaine. Ces fonctions reçoivent en entrée les valeurs du champ devant être dérivé. Contrairement à la méthode précédente, les communications transmettront moins de donnée (1 seule variable conservative à la fois ici contre les 5 variables plus les espèces dans la première méthode). 
+
+%Il est donc possible de savoir, selon la fonction utilisée, avec quels voisins les communications se feront; par exemple, si la dérivée se fait sur l'axe X (fig. \ref{fig:comm_dim1}), le processus devra réaliser 2 envois et 2 réceptions dans cette direction.  TODO point2point comms
+
+
 
 
 \subsection{Équilibrage de charge}
@@ -179,34 +180,6 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
   \end{center}
 \end{table}
 
-\begin{table}[h!]
-  \begin{center}
-    \begin{tabular}{|P{2cm}|P{3.5cm}|P{3.5cm}|P{3.5cm}}
-      \hline
-      & Taille & Overhead & Comm size\\ \hline
-      C & $29\times29\times29$ & 0\%      &  \\ \hline
-      B & $33\times29\times29$ & 13.8\%  &   \\ \hline
-      O & $33\times33\times29$ & 29.5\%  &   \\ \hline
-      I & $33\times33\times33$ & 47.3\%   &   \\ \hline      
-    \end{tabular}
-    \caption{\label{arr:overlap_res}Surcout de calcul - $100\times100\times100$, 64 processus, overlapping 4}
-  \end{center}
-\end{table}
-
-\begin{table}[h!]
-  \begin{center}
-    \begin{tabular}{|P{2cm}|P{3.5cm}|P{3.5cm}|}
-      \hline
-      & Taille & Overhead \\ \hline
-      C(8) & $29\times29\times29$ & 0\%  \\ \hline
-      B(24) & $33\times29\times29$ & 13.8\%  \\ \hline
-      O(24) & $33\times33\times29$ & 29.5\%  \\ \hline
-      I (8)& $33\times33\times33$ & 47.3\%  \\ \hline      
-    \end{tabular}
-    \caption{\label{arr:overlap_res}Surcout de calcul - $100\times100\times100$, 64 processus, overlapping 4}
-  \end{center}
-\end{table}
-
 
 \begin{table}[h!]
   \begin{center}
@@ -223,21 +196,21 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 \end{table}
 
 
-\paragraph{}Un déséquilibre de charge peut également apparaître lors de la phase d'initialisation, même si son impact peut être faible face à l'ensemble de la simulation, il est préférable de l'éviter. En effet, il faut éviter qu'un seul processus doive initialiser l'ensemble du domaine puis envoyer les informations calculées à tous les autres processus. Dans le cas de ce programme l'initialisation peut-être réalisée de manière indépendante (sans aucune synchronisaton). En effet, les initialisations simples (valeur d'une variable fournies dans le fichier de configuration) ne nécessite aucun calcul. Les initialisation nécessitant des calculs sont en général basée sur la position physique des point du domaines et peuvent donc être initialisés en totale indépendance, le plus souvent par une fonction.
+\paragraph{}Un déséquilibre de charge peut également apparaître lors de la phase d'initialisation, même si son impact peut être faible face à l'ensemble de la simulation, il est préférable de l'éviter. En effet, il faut éviter qu'un seul processus doive initialiser l'ensemble du domaine puis envoyer les informations calculées à tous les autres processus. Dans le cas de ce programme l'initialisation peut-être réalisée de manière indépendante (sans aucune synchronisaton). En effet, les initialisations simples (valeur d'une variable fournies dans le fichier de configuration) ne nécessite aucun calcul. Les initialisation nécessitant des calculs sont en général basée sur la position physique des point du domaine et peuvent donc être réalisées en totale indépendance.
 
 
 \subsection{Traitement des bordures internes}
-Lors du découpage du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il est donc nécessaire de s'intéresser au traitement réservé à celles-ci. 
+Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il est donc nécessaire de s'intéresser au traitement réservé à celles-ci. 
 
-Après le calcul des gradients, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus se trouve sur une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui a déterminer lors du découpage du domaine.
+Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus se trouve sur une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est déterminer lors du découpage du domaine.
 
-Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais il est maintenant nécessaire de différencier les bordures réelles des bordures physiques.
+Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais maintenant seul les sous-domaines se trouvant sur le bordures physique les appliqueront.
 
-\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
+%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
 
 \subsection{Validation}
 
-\paragraph{Cas d'un unique processus}Avant de tester la validité du programme avec plusieurs processus, il est nécessaire de s'assurer qu'il peut être lancé avec un seul processus et que les résulats fournis soient exactement identiques à la version 3D validée à la section \ref{sec:3D-validation}. Même si ce test paraît trivial, il est important de le faire. Il sera également utile de comparer le temps pris par ce test par rapport au temps de la version 3D séquentielle pour estimer le surcôut pouvant être induit par l'utilisation de MPI (découpage du domaine, calcul de l'overlapping, fausses communications ...).
+\paragraph{Cas d'un unique processus}Avant de tester la validité du programme avec plusieurs processus, il est nécessaire de s'assurer qu'il peut être lancé avec un seul processus et que les résulats fournis soient exactement identiques à la version 3D validée à la section \ref{sec:3D-validation}. Même si ce test paraît trivial, il est important de le faire. Il sera également utile de comparer le temps pris par ce test par rapport au temps de la version 3D séquentielle pour estimer le surcôut pouvant être induit par l'utilisation de MPI.
 
 \paragraph{Cas avec décomposition de domaine}
 Comme vu dans la section \ref{sec:p2-tr} le calcul des gradients est dépendant de l'ensemble du domaine. Pour s'assurer de l'exactitude des résultats obtenus dans cette version MPI, j'ai donc utiliser un overlapping assez grand permettant d'affiner les résultats au maximum. J'ai ensuite calculer les valeurs moyennes des champs de la solution afin de les comparer avec ceux obtenus avec la version séquentielle du programme (\ref{sec:3D-validation}).

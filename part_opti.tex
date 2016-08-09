@@ -1,5 +1,5 @@
 \section{Partie 3:Etude de performance et optimisations}
-\paragraph{}Je me suis finalement penché sur les performances de la version 3D de NTMIX développé au cours de ce stage. J'ai dans un premier temps étudié les performances séquentielles du programme (code tel qu'il était à la fin de la première partie) puis les performances de la version parallèle.
+%\paragraph{}Je me suis finalement penché sur les performances de la version 3D de NTMIX développé au cours de ce stage. J'ai dans un premier temps étudié les performances séquentielles du programme (code tel qu'il était à la fin de la première partie) puis les performances de la version parallèle.
 \subsection{Présentation du matériel}
 L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du CERFACS, le Bullx B510 (neptune) et le LENOVO (nemo). Ils possèdent les caractéristiques suivantes:
 
@@ -7,7 +7,7 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
   \begin{center}
     \begin{tabular}{|M{3.5cm}|M{5cm}|M{5cm}|}
       \hline
-      & Neptune & Nemo \\
+      & Bullx & Lenovo \\
       \hline
       Noeuds & 158 & 252 \\
       \hline
@@ -26,123 +26,133 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
   \caption{\label{tab:carac}Caractèristiques des calculateurs du Cerfacs}
 \end{table}
 
-\begin{figure}[ht]
-  \centering
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.7\linewidth]{figures/neptune.jpg}
-    \caption{\label{fig:neptune}Neptune}
-  \end{minipage}%
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{figures/nemo.jpg}
-    \caption{\label{fig:neptune_node}Nemo}
-  \end{minipage}
-\end{figure}
+%\begin{figure}[ht]
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.7\linewidth]{figures/neptune.jpg}
+%    \caption{\label{fig:neptune}Neptune}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/nemo.jpg}
+%    \caption{\label{fig:neptune_node}Nemo}
+%  \end{minipage}
+%\end{figure}
 
+\subsection{Métriques utilisées}
 
 
 \subsection{Performances séquentielles}
-Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
+Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 
+
+Présenter les différents cas de tests (sym/per/nonper)
+%Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
 
 \subsubsection{Vectorisation}
-J'ai ensuite compiler le programme avec l'option -xAVX qui permet de générer un code vectorisé pour les processeurs possédant l'extension AVX. Pour profiler le programme, j'ai utilisé Intel Advisor qui permet d'analyser la vectorisation d'un programme. Comme on peut le constater sur la figure \ref{fig:advixe}, le compilateur n'a vectorisé qu'un faible pourcentage de boucles (en comparaison avec la référence cf img). Ceci vient du fait que l'ensemble des variables sont contenues dans un unique tableau (fig. \ref{fig:array_s}) et qu'on y accède grâce à des pointeurs. Lorsqu'une boucle doit travailler sur plusieurs tableaux contenus dans ce grand tableau (fig. \ref{fig:o2_avx_novect}), le compilateur assume qu'elle travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un nom et que le programme ne dépassera pas les limites d'un tableau.
+L'application est constitué de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation.
 
-
-\begin{figure}	
-  \centering
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{figures/advixe_O2.png}
-    \caption{\label{fig:advixe_o2}}
-  \end{minipage}%
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{figures/advixe_O2_avx.png}
-    \caption{\label{fig:advixe_o2_avx}Caption 2}
-  \end{minipage}
-  \caption{Répartition des boucles}\label{fig:advixe}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=0.35]{figures/array_s.png}
-  \caption{\label{fig:array_s}Structure de la mémoire}
-\end{figure}
-
-
-\begin{figure}[h]
-  \centering
-  \begin{lstlisting}
-    !
-    !    DETERMINE THE MASS FRACTION
-    !
-    DO I=1,NX*NY*NZ
-    YK(I)=RHO_Y_TILDE(I,K)/RHO(I)
-    END DO
-  \end{lstlisting}
-  \caption{\label{fig:o2_avx_novect}Boucle non vectorisée}
-\end{figure}
+Comme on peut le constater sur la figure \ref{}, la vectorisation à peu d'influence sur le temps d'exécution (donner des pourcentages). Grâce à Intel Advisor, qui permet d'analyser la vecorisation d'un programme, on peut voir que 
 
 
 
-\begin{figure}	
-  \centering
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_compute.pdf}
-  \end{minipage}%
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_diag.pdf}
-  \end{minipage}
-  \caption{Temps par point - Cas périodique}\label{fig:scal_tpp}
-\end{figure}
+
+Qu'est ce que c'est?
+Qu'est ce que ca a changé? (cf les courbes)
+Pourquoi si peu efficace ? (memory bound)
+%J'ai ensuite compiler le programme avec l'option -xAVX qui permet de générer un code vectorisé pour les processeurs possédant l'extension AVX. Pour profiler le programme, j'ai utilisé Intel Advisor qui permet d'analyser la vectorisation d'un programme. Comme on peut le constater sur la figure \ref{fig:advixe}, le compilateur n'a vectorisé qu'un faible pourcentage de boucles (en comparaison avec la référence cf img). Ceci vient du fait que l'ensemble des variables sont contenues dans un unique tableau (fig. \ref{fig:array_s}) et qu'on y accède grâce à des pointeurs. Lorsqu'une boucle doit travailler sur plusieurs tableaux contenus dans ce grand tableau (fig. \ref{fig:o2_avx_novect}), le compilateur assume qu'elle travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un nom et que le programme ne dépassera pas les limites d'un tableau.
 
 
-\begin{figure}	
-  \centering
-  \begin{minipage}{.5\textwidth}
-    \centering
-    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_compute.pdf}
-    \caption{\label{fig:scal_compute}}
-  \end{minipage}%
-  \begin{minipage}{.5\textwidth}
-    \centering
-    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_diag.pdf}
-    \caption{\label{fig:scal_diag}Caption 2}
-  \end{minipage}
-  \caption{Temps par point - Cas symétrique}\label{fig:scal_tpp}
-\end{figure}
+%\begin{figure}	
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/advixe_O2.png}
+%    \caption{\label{fig:advixe_o2}}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{figures/advixe_O2_avx.png}
+%    \caption{\label{fig:advixe_o2_avx}Caption 2}
+%  \end{minipage}
+%  \caption{Répartition des boucles}\label{fig:advixe}
+%\end{figure}
+
+%\begin{figure}[ht]
+%  \centering
+%  \includegraphics[scale=0.35]{figures/array_s.png}
+%  \caption{\label{fig:array_s}Structure de la mémoire}
+%\end{figure}
+
+
+%\begin{figure}[h]
+%  \centering
+%  \begin{lstlisting}
+%    !
+%    !    DETERMINE THE MASS FRACTION
+%    !
+%    DO I=1,NX*NY*NZ
+%    YK(I)=RHO_Y_TILDE(I,K)/RHO(I)
+%    END DO
+%  \end{lstlisting}
+%  \caption{\label{fig:o2_avx_novect}Boucle non vectorisée}
+%\end{figure}
+
+
+
+%\begin{figure}	
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_compute.pdf}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_diag.pdf}
+%  \end{minipage}
+%  \caption{Temps par point - Cas périodique}\label{fig:scal_tpp}
+%\end{figure}
+%
+%
+%\begin{figure}	
+%  \centering
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_compute.pdf}
+%    \caption{\label{fig:scal_compute}}
+%  \end{minipage}%
+%  \begin{minipage}{.5\textwidth}
+%    \centering
+%    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_diag.pdf}
+%    \caption{\label{fig:scal_diag}Caption 2}
+%  \end{minipage}
+%  \caption{Temps par point - Cas symétrique}\label{fig:scal_tpp}
+%\end{figure}
 
 
 
 \subsubsection{Alignement de la mémoire}
 blabla marche pas
 
-\paragraph{durée=f(taille)}
+%\paragraph{durée=f(taille)}
 
 
 \subsection{Performances parallèle}
-Je me suis ensuite interrésé aux performances parallèle de NTMIX.
-
-\subsubsection{Méthode de communication}
-Avant de comparer les méthodes de recouvrement, je me suis dans un premier temps interréssé aux méthodes de communication utilisées pour la première méthode (\ref{sec:}). Pour cela, j'ai comparer la durée passée dans des communications pour chacune des méthode et ceux pour différentes taille de grille.
 
 
-mesurer le temps d'exécution par point par pas de temps de chacune des méthodes pour différentes taille de grille.
+%\subsubsection{Méthode de communication}
+%Avant de comparer les méthodes de recouvrement, je me suis dans un premier temps interréssé aux méthodes de communication utilisées pour la première méthode (\ref{sec:}). Pour cela, j'ai comparer la durée passée dans des communications pour chacune des méthode et ceux pour différentes taille de grille.
 
 
-\subsubsection{Méthode de recouvrement}
-Je compare ici les 2 méthodes utilisée pour le recouvrement de domain présentées dans la partie précedente. Pour rappel: 
-\begin{itemize}
-\item Méthode 1: 3 grosses communications/pas de temps
-\item Méthode 1: une multitude petites communications/pas de temps
-  
-\end{itemize}
+%mesurer le temps d'exécution par point par pas de temps de chacune des méthodes pour différentes taille de grille.
+
+
+%\subsubsection{Méthode de recouvrement}
+%Je compare ici les 2 méthodes utilisée pour le recouvrement de domain présentées dans la partie précedente. Pour rappel: 
 
 
 
 
-\subsubsection{Décomposition du domaine}
-Le découpage du domaine est entièrement configurable par l'utilisateur, nous verons donc ici l'influence que ce découpage peut avoir sur le temps d'exécution du programme. 
+
+%\subsubsection{Décomposition du domaine}
+%Le découpage du domaine est entièrement configurable par l'utilisateur, nous verons donc ici l'influence que ce découpage peut avoir sur le temps d'exécution du programme. 

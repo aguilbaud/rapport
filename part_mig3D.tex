@@ -21,7 +21,7 @@ L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et 
 
 \paragraph{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier à ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
 
-\paragraph{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donnée. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, je l'ai modifié pour qu'il génère des fichiers HDF5 (Hierarchical Data Format) qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (eXtensible Data Model and Format). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
+\paragraph{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donnée. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (Hierarchical Data Format) qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (eXtensible Data Model and Format). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
 
 
 \begin{figure}[ht]
@@ -52,12 +52,14 @@ J'ai donc utilisé Valgrind, un outil permettant notamment d'analyser la mémoir
 \subsection{Passage en 3D}
 
 \subsubsection{Méthode}\label{sec:3dmeth}
-Dans cette partie, je me suis intéressé au passage de l'application en 3 dimensions. Pour minimiser les erreurs pouvant être induites par ce changement, j'ai dans un premier temps décidé de laisser la nouvelle dimension à une taille de 1. En effet, si la dimension ajoutée est de 1, le programme doit avoir un comportement identique à la version précédemment validée. Les variables conservatives de la simulation (densité, vitesses, énergie..) étaient toutes représentées par des tableaux en 2 dimensions. J'ai donc progressivement remplacé ces tableaux par d'autres en 3D, toujours avec la dernière dimension de taille 1,  me permettant ainsi de vérifier les résultats obtenus tout au long du développement. Lorsque je remplaçait ces tableaux, je modifiais en même temps les nombreuses boucles de calcul parcourant ces tableaux (un parcours sur X et Y devient un parcours sur X,Y et Z). 
+Dans cette partie, on s'intéresse au passage de l'application en 3 dimensions. Pour minimiser les erreurs pouvant être induites par ce changement, j'ai dans un premier temps décidé de laisser la nouvelle dimension à une taille de 1. En effet, si la dimension ajoutée est de 1, le programme doit avoir un comportement identique à la version 2D. Les variables conservatives de la simulation (densité, vitesses, énergie..) étaient toutes représentées par des tableaux en 2 dimensions. J'ai donc progressivement remplacé ces tableaux par d'autres en 3D, toujours avec la dernière dimension de taille 1,  me permettant ainsi de vérifier les résultats obtenus tout au long du développement. Lorsque je remplaçais ces tableaux, je modifiais en même temps les nombreuses boucles de calcul parcourant ceci (un parcours sur X et Y devient un parcours sur X,Y et Z). 
 
-Une fois ces modifications terminées, j'ai augmenté la taille de la troisième dimension et me suis intérrésé aux problèmes suivants.
+Une fois ces modifications terminées, et le comportement du programme validé, j'ai augmenté la taille de la troisième dimension et me suis intéressé aux problèmes suivants.
 
 
  %modifié le code par petits blocs.  sont stockées dans un seul tableau et des pointeurs viennent délimiter ce tableau en sous-tableaux (fig. \ref{fig:array_2d}). Ces pointeurs représentaient tous des tableaux 2D. J'ai donc dans un premier temps modifié la taille du grand tableau pour qu'il puisse contenir la dimension supplémentaire mais en laissant les pointeurs aux bons emplacements et j'ai ajouté des tableaux 3D, qui n'étaient pas encore utilisés à ce moment-là. A partir de là, j'ai remplacé progressivement les tableaux 2D par les tableaux 3D en vérifiant que les résultats restaient identiques au fur et à mesure. Cette méthode m'a donc permis de réduire le risque d'erreurs au maximum.
+
+%1/sqrt(2)*exp(-(coordsX/(2*sqrt(2)))^2)
 
 \paragraph{Calcul des gradients}Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'il prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
 
@@ -114,26 +116,26 @@ Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimique et l
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[width=.9\linewidth]{figures/diff.png}
+    %\includegraphics[width=.9\linewidth]{figures/diff.png}
     \caption{\label{fig:diff_0}Valeur x $t_0$}
   \end{subfigure}%
   ~ 
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[width=.9\linewidth]{figures/diff_325.png}
+    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
     \caption{\label{fig:diff_325}Valeur x $t$}
   \end{subfigure}
   \caption{Caption place holder}
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[width=.9\linewidth]{figures/diff_0.png}
+    %\includegraphics[width=.9\linewidth]{figures/diff_0.png}
     \caption{\label{fig:diff_0_domain}Valeur x $t_0$ - Domaine complet}
   \end{subfigure}%
   ~ 
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[width=.9\linewidth]{figures/diff_325.png}
+    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
     \caption{\label{fig:diff_325_domain}Valeur x $t$ - Domaine complet}
   \end{subfigure}
   \caption{\label{fig:diff_}Diffusion}
