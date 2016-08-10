@@ -41,93 +41,81 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 %\end{figure}
 
 \subsection{Métriques utilisées}
-
+Le temps d'exécution pour calculer un point pour un pas de temps ($\mu s/it/p$). Plus cette valeur est basse, plus le code est efficace. 
 
 \subsection{Performances séquentielles}
-Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 
+Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 3 cas ont été définis; ils permettent de couvrir une plus grande partie du code; en effet chacun de ces cas utilise des parties du code différentes:
+\begin{itemize}
+\item Cas périodique: le domaine de calcul est périodique
+\item Cas non-périodique: dans ce cas, les frontières sont traitées
+\item Cas symétrique: des méthodes de dérivations différentes sont utilisées
+\end{itemize}
 
-Présenter les différents cas de tests (sym/per/nonper)
+On part d'une taille de 20 points de coté (donc la taille du domaine est de $20\times20\times20$ points) et on l'augmente par pas de 50\%. Pour chacune de ces tailles de domaine, on réalise 20 itérations et on calcule la moyenne des temps par points de celles-ci.
+
 %Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
 
 \subsubsection{Vectorisation}
-L'application est constitué de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation.
-
-Comme on peut le constater sur la figure \ref{}, la vectorisation à peu d'influence sur le temps d'exécution (donner des pourcentages). Grâce à Intel Advisor, qui permet d'analyser la vecorisation d'un programme, on peut voir que 
+L'application est constituée de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation. La vectorisation est présente sur les processeurs possédant des instructions SIMD (Single Instruction Multiple Data). On peut donc appliquer une opération sur plusieurs éléments à la fois au lieu d'un seul. Comme on peut le voir sur la figure \ref{fig:simd}, si on à une boucle calculant la somme de 2 tableaux, sans vectorisation, le processeurs réalisera une addition à la fois mais avec, il peut traiter plus d'éléments à la fois.
 
 
-
-
-Qu'est ce que c'est?
-Qu'est ce que ca a changé? (cf les courbes)
-Pourquoi si peu efficace ? (memory bound)
-%J'ai ensuite compiler le programme avec l'option -xAVX qui permet de générer un code vectorisé pour les processeurs possédant l'extension AVX. Pour profiler le programme, j'ai utilisé Intel Advisor qui permet d'analyser la vectorisation d'un programme. Comme on peut le constater sur la figure \ref{fig:advixe}, le compilateur n'a vectorisé qu'un faible pourcentage de boucles (en comparaison avec la référence cf img). Ceci vient du fait que l'ensemble des variables sont contenues dans un unique tableau (fig. \ref{fig:array_s}) et qu'on y accède grâce à des pointeurs. Lorsqu'une boucle doit travailler sur plusieurs tableaux contenus dans ce grand tableau (fig. \ref{fig:o2_avx_novect}), le compilateur assume qu'elle travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un nom et que le programme ne dépassera pas les limites d'un tableau.
-
-
-%\begin{figure}	
-%  \centering
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    \includegraphics[width=.9\linewidth]{figures/advixe_O2.png}
-%    \caption{\label{fig:advixe_o2}}
-%  \end{minipage}%
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    \includegraphics[width=.9\linewidth]{figures/advixe_O2_avx.png}
-%    \caption{\label{fig:advixe_o2_avx}Caption 2}
-%  \end{minipage}
-%  \caption{Répartition des boucles}\label{fig:advixe}
-%\end{figure}
-
-%\begin{figure}[ht]
-%  \centering
-%  \includegraphics[scale=0.35]{figures/array_s.png}
-%  \caption{\label{fig:array_s}Structure de la mémoire}
-%\end{figure}
-
-
-%\begin{figure}[h]
-%  \centering
-%  \begin{lstlisting}
-%    !
-%    !    DETERMINE THE MASS FRACTION
-%    !
-%    DO I=1,NX*NY*NZ
-%    YK(I)=RHO_Y_TILDE(I,K)/RHO(I)
-%    END DO
-%  \end{lstlisting}
-%  \caption{\label{fig:o2_avx_novect}Boucle non vectorisée}
-%\end{figure}
+Sur LENOVO, le jeu d'instruction AVX2 est disponible, il permet de traiter des vecteurs de 256 octets, soit 4 nombre double précision. Si les boucles réalise beaucoup de calculs, on peut donc esperer diviser le temps par 4. Cependant, comme on peut le constater sur la figure \ref{fig:bench_scal_nemo}, la vectorisation n'a entraînée qu'un gain d'entre 18 et 25\% selon le cas. Grâce à Intel Advisor, qui permet d'analyser les boucles qui ont été vectorisées, il est possible de voir que:
+\begin{itemize}
+\item Certaines fonctions dans lesquelles le programme passe beaucoup de temps ne sont pas vectorisée à cause de dépendances, nottamment dans le calculs des gradients. Dans ce cas, on est dépendant de la méthode utilisée pour ces calculs et on ne peut pas forcer la vectorisation de ces boucles.
+\item Beaucoup de petites boucles de calcul ne sont pas vectorisées. Ceci est dû à la structure de la mémoire du programme; tous les tableaux contennant des variables conservatives sont en réalité des sous-parties d'un plus grand tableaux. Lorsque des opérations sont effectuées sur ces tableaux, le compilateur assume qu'elle travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un nom et que le programme ne dépassera pas les limites d'un tableau.
+\end{itemize}
 
 
 
-%\begin{figure}	
-%  \centering
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_compute.pdf}
-%  \end{minipage}%
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_per_diag.pdf}
-%  \end{minipage}
-%  \caption{Temps par point - Cas périodique}\label{fig:scal_tpp}
-%\end{figure}
-%
-%
-%\begin{figure}	
-%  \centering
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_compute.pdf}
-%    \caption{\label{fig:scal_compute}}
-%  \end{minipage}%
-%  \begin{minipage}{.5\textwidth}
-%    \centering
-%    % \includegraphics[width=.9\linewidth]{gnuplot/bench_scalaire_sym_diag.pdf}
-%    \caption{\label{fig:scal_diag}Caption 2}
-%  \end{minipage}
-%  \caption{Temps par point - Cas symétrique}\label{fig:scal_tpp}
-%\end{figure}
+(memory bound)
+
+
+
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=1,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+  \caption{\label{fig:bench_scal_nemo_nonper}}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=2,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+  \caption{\label{fig:bench_scal_nemo_sym}}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    %\includepdf[pages={2}]{gnuplot/bench_scalaire.pdf}
+    \includegraphics[page=3,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+  \caption{\label{fig:bench_scal_nemo_per}}
+  \end{subfigure}
+  \caption{\label{fig:bench_scal_nemo}Temps par points des cas tests - LENOVO}
+\end{figure}
+
+
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=1,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_nonper}}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=2,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_sym}}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    %\includepdf[pages={2}]{gnuplot/bench_scalaire.pdf}
+    \includegraphics[page=3,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_per}}
+  \end{subfigure}
+  \caption{\label{fig:bench_scal_neptune}Temps par points des cas tests - BULL}
+\end{figure}
+
 
 
 
