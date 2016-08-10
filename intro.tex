@@ -1,10 +1,10 @@
 \section*{Introduction}\addcontentsline{toc}{section}{Introduction}
 \subsection{Le Cerfacs}\label{sec:intro}
 
-Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille avec ses associés (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifique et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée.
+Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille pour ses actionnaires (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifique et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée.
 
 
-Le personnel du Cerfacs est divisée en équipes:
+Le personnel du Cerfacs est réparti en équipes:
 \begin{itemize}
 \item Algorithmes parallèles
 \item Aviation \& environnement
@@ -21,24 +21,24 @@ Bénédicte CUENOT, une des chef de projet de l'équipe, m'encadrait pour la par
 
 \subsubsection{L'équipe CSG}
 L'équipe CSG (Computer Support Group) s'occupe de la gestion des infrastructures informatiques et des moyens matériels mis à la disposition des différentes équipes. Elle fournit également son expertise aux chercheurs pour qu'ils puissent exploiter au mieux les outils et le matériel disponibles.
-Dans le cadre de mon stage, j'ai surtout eu contact avec Mme Isabelle D'AST, ingénieur Logiciel HPC. C'est elle qui ma conseillé sur toute la partie HPC (High Performance Computing).
+Dans le cadre de mon stage, j'ai surtout eu contact avec Mme Isabelle D'AST, ingénieur Logiciel HPC. C'est elle qui m'a conseillé sur toute la partie HPC (High Performance Computing).
 
 \subsection{Le stage}
 \subsubsection{NTMIX\_CHEMKIN}
-Mon stage portait sur NTMIX\_CHEMKIN, un des codes de simulation dévellopé par l'équipe CFD. C'est un solveur d'écoulements réactifs (``écoulements dans lesquels il y a des réactions chimiques'') en 2D s'appuyant sur une approche DNS (Direct Numerical Simulation). Il est couplé avec la librairie CHEMKIN qui permet la simulation de la chimie complexe. Ce code est utilisé pour étudier la structure chimique des flammes et leur comportement en présence d'un écoulement dynamique (combustion turbulente).\cite{cerfacs}
+Mon stage portait sur NTMIX\_CHEMKIN, un des codes de simulation développé par l'équipe CFD. C'est un solveur d'écoulements réactifs (``écoulements dans lesquels il y a des réactions chimiques'') en 2D s'appuyant sur une approche DNS (Direct Numerical Simulation). Il est couplé avec la librairie CHEMKIN qui permet la simulation de la chimie complexe. Ce code est utilisé pour étudier la structure chimique des flammes et leur comportement en présence d'un écoulement dynamique (combustion turbulente).\cite{cerfacs}
 
 
 
-Une simulation numérique directe (DNS: Direct Numerical Simulation) est une simulation dans laquelle les équations de Navier-Strokes (équations décrivant le mouvement des fluides visqueux) sont résolues numériquement sans aucun modèle de turbulence. Cependant, le coût d'une telle simulation est très élevé. Il est actuellement impossible de résoudre des problèmes industriels avec ce type de simulation. Elle présente cependant un intérêt en recherche fondamentale. Grâce à la DNS, il est possible de faire des ``expériences numériques'' et d'en extraire des informations difficilement récupérables en laboratoire.\cite{cfd-online-DNS}
+Une simulation numérique directe (DNS: Direct Numerical Simulation) est une simulation dans laquelle les équations de Navier-Stokes (équations décrivant le mouvement des fluides visqueux) sont résolues numériquement sans aucun modèle de turbulence. Cependant, le coût d'une telle simulation est très élevé. Il est actuellement impossible de résoudre des problèmes industriels avec ce type de simulation. Elle présente cependant un intérêt en recherche fondamentale. Grâce à la DNS, il est possible de faire des ``expériences numériques'' et d'en extraire des informations difficilement récupérables en laboratoire.\cite{cfd-online-DNS}
 
 
 \subsubsection{Objectifs}
-Comme vu précedemment, le coût d'une simulation réalisée par NTMIX\_CHEMKIN est très élevé. Son utilisation était donc restreinte au cas en 2D. L'objectif de ce stage est de développer une version 3D de NTMIX\_CHEMKIN.
+Comme vu précedemment, le coût d'une simulation réalisée par NTMIX\_CHEMKIN est très élevé. Son utilisation était donc restreinte au cas en bidimensionnel. L'objectif de ce stage est de développer une version 3D de NTMIX\_CHEMKIN.
 
 
-Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autre méthodes de simulation.
+Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autres méthodes de simulation.
 
 
-Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de parallèliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de tourner sur de grand maillage ($\approx 10^9$ points) en un temps raisonnable.
+Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de tourner sur de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
 
 

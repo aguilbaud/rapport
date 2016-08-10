@@ -1,7 +1,7 @@
-\section{Partie 3:Etude de performance et optimisations}
+\section{Partie 3: Etude de performance et optimisations}
 %\paragraph{}Je me suis finalement penché sur les performances de la version 3D de NTMIX développé au cours de ce stage. J'ai dans un premier temps étudié les performances séquentielles du programme (code tel qu'il était à la fin de la première partie) puis les performances de la version parallèle.
 \subsection{Présentation du matériel}
-L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du CERFACS, le Bullx B510 (neptune) et le LENOVO (nemo). Ils possèdent les caractéristiques suivantes:
+L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du CERFACS, le Bullx B510 (neptune) et le cluster LENOVO (nemo). Ils possèdent les caractéristiques suivantes:
 
 \begin{table}[h]
   \begin{center}
@@ -17,13 +17,13 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
       \hline
       Consommation à vide & 25 kW.h & 34 kW.h \\
       \hline
-      Processeurs & Intel Sandy Bridge 8 coeurs (2.6 GHz) & Intel Ivy bridge 12 coeurs (2.5 GHz) \\
+      Processeurs & Intel Sandy Bridge bi-socket, 8 coeurs (2.6 GHz) & Intel Haswell bi-socket, 12 coeurs (2.5 GHz) \\
       \hline
-      Mémoire & 32 Go de mémoire cadencée à 1.6 GHz & 64 Go de mémoire cadencée à 2.1 GHz \\
+      Mémoire & 32 Go de mémoire cadencée à 1.6 GHz & 64 Go de mémoire cadencée à 2.133 GHz \\
       \hline
     \end{tabular}
   \end{center}
-  \caption{\label{tab:carac}Caractèristiques des calculateurs du Cerfacs}
+  \caption{\label{tab:carac}Caractéristiques des calculateurs du Cerfacs}
 \end{table}
 
 %\begin{figure}[ht]
@@ -144,3 +144,14 @@ blabla marche pas
 
 %\subsubsection{Décomposition du domaine}
 %Le découpage du domaine est entièrement configurable par l'utilisateur, nous verons donc ici l'influence que ce découpage peut avoir sur le temps d'exécution du programme. 
+
+%https://www.sharcnet.ca/help/index.php/Measuring_Parallel_Scaling_Performance
+\subsection{Scalabilité}
+
+\subsubsection{Scalabilité forte}
+Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoût induit par un programme paralléle. 	
+
+\subsubsection{Scalabilité faible}
+Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augenter la taille globale du problème. Etant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
+
+

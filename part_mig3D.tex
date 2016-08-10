@@ -1,5 +1,5 @@
-\section{Partie 1: Migration de NTMIX et développement d'une version 3D}
-Une grande partie du temps en début du stage a été consacrée à la prise en main de NTMIX. En effet NTMIX est un code d'environ 30000 lignes de codes ($\approx 25000$ + $\approx 5000$ pour CHEMKIN). Pour me familiariser avec NTMIX, j'ai utilisé Allinea DDT, un debugger. Il permet d'observer le comportement d'un programme, de voir l'ordre d'exécution des différentes fonctions, et ainsi comprendre un peu mieux son déroulement. C'est aussi durant cette période que j'ai pu discuter avec mes encadrants afin d'affiner les objectifs du stage.
+\section{Partie 1: Modernisation de NTMIX et développement d'une version 3D}
+Une grande partie du temps en début du stage a été consacré à la prise en main de NTMIX. En effet NTMIX est un code d'environ 30000 lignes de codes ($\approx 25000$ + $\approx 5000$ pour CHEMKIN). Pour me familiariser avec NTMIX, j'ai utilisé Allinea DDT, un debugger. Il permet d'observer le comportement d'un programme, de voir l'ordre d'exécution des différentes fonctions, et ainsi comprendre un peu mieux son déroulement. C'est aussi durant cette période que j'ai pu discuter avec mes encadrants afin d'affiner les objectifs du stage.
 
 \paragraph{}
 Après cette période et avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû moderniser le code. En effet, NTMIX a été développé en Fortran 77 ce qui ne permettait pas l'allocation dynamique de tableau; l'ensemble des variables étaient allouées de manière statique ce qui augmentait la taille de l'exécutable et réduisait grandement la flexibilité; en effet, il était nécessaire de recompiler le programme à chaque changement de la taille du maillage. Pour résoudre ce problème, il m'a été demandé de migrer le code du standard Fortran 77 au standard Fortran 90.
@@ -19,9 +19,9 @@ Après cette période et avant de commencer à développer une version en 3 dime
 
 L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et de m'éviter une tâche fastidieuse.
 
-\paragraph{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier à ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
+\paragraph{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
 
-\paragraph{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donnée. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (Hierarchical Data Format) qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (eXtensible Data Model and Format). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
+\paragraph{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (Hierarchical Data Format) qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (eXtensible Data Model and Format). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
 
 
 \begin{figure}[ht]
@@ -61,13 +61,13 @@ Une fois ces modifications terminées, et le comportement du programme validé, 
 
 %1/sqrt(2)*exp(-(coordsX/(2*sqrt(2)))^2)
 
-\paragraph{Calcul des gradients}Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'il prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
+\paragraph{Calcul des gradients}Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'ils prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
 
 
 \paragraph{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numérique qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Pour palier à ce problème, la méthode NSCBC(Navier-Strokes Characteristic Boundary Conditions) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
+Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Pour palier ce problème, la méthode NSCBC(Navier-Strokes Characteristic Boundary Conditions) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
 
-\paragraph{Initialisation}Il a également était nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement  celles nécessaires permettant de lancer les tests présentés dans la section suivantes.
+\paragraph{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement  celles nécessaires permettant de lancer les tests présentés dans la section suivante.
 
 
 \paragraph{}TODO Cependant, plusieurs parties du code prévoyaient déjà le passage du code en 3 dimensions, ainsi la préparation des tableaux utilisés pour le calcul des gradients était présente et a facilité le travail. La librairie CHEMKIN est adimensionnée ce qui a permis d'ajouter une dimension sans avoir à modifier ses fonctions. 
@@ -81,14 +81,14 @@ Une simulation DNS doit être très précise et ne fournit pas de moyen de minim
 % \end{itemize}
 
 \subsubsection{Validation}\label{sec:3D-validation}
-Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant une dimension nulle ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
+Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant la 3éme dimension à 1 ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
 
 \begin{itemize}
 \item Écoulements uniformes: un flux uniforme traverse le domaine selon un axe; le flux étant constant, les dérivées doivent rester nulles et les vitesses ne doivent pas varier
 \item Un front de flamme (une zone dans laquelle se déroule la combustion):
   \begin{itemize}
   \item Vitesse nulle: le front de flamme doit rester statique et un phénomène de diffusion doit être observé (mouvement de molécules d'une région de haute concentration vers une région de faible concentration)
-  \item Vitesse non-nulle: en plus du phénomène de diffusion, la convection doit également apparaitre (mouvement de groupe de molécules au sein d'un fluide)
+  \item Vitesse non-nulle: en plus du phénomène de diffusion, la convection doit également apparaître (mouvement de groupe de molécules au sein d'un fluide)
   \end{itemize}
 \item Turbulence homogène isotrope
 \end{itemize}
@@ -99,11 +99,11 @@ Comme dit précédemment, les dérivées doivent être nulles dans ce cas et la 
 \begin{figure}[ht]
   \centering
   % \includegraphics[scale=0.3]{figures/uniform_flow.png}
-  \caption{\label{fig:uniform_flow}Flot uniforme}
+  \caption{\label{fig:uniform_flow}Ecoulement uniforme}
 \end{figure}
 
 \paragraph{Front de flamme}
-Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimique et la concentration d'une espèce est modélisée par une gaussienne centrée simplifiée en $e^{-(x^2)}$ et l'autre par $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration totale de 1 en tout point du domaine. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{f}$. Sur la figure \ref{fig:diff}, nous pouvons observer en bleue la valeur initiale d'une espèce, en vert sa valeur au temps $t$ de la simulation et en rouge la valeur théorique.
+Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et la concentration d'une espèce est modélisée par une gaussienne centrée simplifiée en $e^{-(x^2)}$ et l'autre par $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration totale de 1 en tout point du domaine. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{f}$. Sur la figure \ref{fig:diff}, nous pouvons observer en bleue la valeur initiale d'une espèce, en vert sa valeur au temps $t$ de la simulation et en rouge la valeur théorique.
 
 % $f(x,t_0)=e^{\frac{-(x-x_0)^2}{\sigma^2}}$
 % \begin{figure}[ht]
