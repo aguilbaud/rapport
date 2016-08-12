@@ -1,13 +1,14 @@
 \section{Partie 1: Modernisation de NTMIX et développement d'une version 3D}
+
+\subsection{Travail préliminaire}
 Une grande partie du temps en début du stage a été consacré à la prise en main de NTMIX. En effet NTMIX est un code d'environ 30000 lignes de codes ($\approx 25000$ + $\approx 5000$ pour CHEMKIN). Pour me familiariser avec NTMIX, j'ai utilisé Allinea DDT, un debugger. Il permet d'observer le comportement d'un programme, de voir l'ordre d'exécution des différentes fonctions, et ainsi comprendre un peu mieux son déroulement. C'est aussi durant cette période que j'ai pu discuter avec mes encadrants afin d'affiner les objectifs du stage.
 
-\paragraph{}
+\paragraph{Gestion du projet}Afin de faciliter le devellopement, j'ai utilisé \textit{git} un logiciel de gestion de versions. Il permet de stocker l'ensemble des fichiers modifiés en respectant la chronologie de ces changements. Il est donc possible de garder une trace de toutes les modifications réalisées sur le code original, autorisant ainsi à revenenir à une version précédente dans le cas où le code modifié serait faux.
+ 
+\subsection{Migration de NTMIX}
 Après cette période et avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû moderniser le code. En effet, NTMIX a été développé en Fortran 77 ce qui ne permettait pas l'allocation dynamique de tableau; l'ensemble des variables étaient allouées de manière statique ce qui augmentait la taille de l'exécutable et réduisait grandement la flexibilité; en effet, il était nécessaire de recompiler le programme à chaque changement de la taille du maillage. Pour résoudre ce problème, il m'a été demandé de migrer le code du standard Fortran 77 au standard Fortran 90.
 
-\subsection{Migration de NTMIX}
-\subsubsection{Travail réalisé}
-
-\paragraph{Réécriture de code}Cette partie consistait donc à réécrire le code dans une norme plus récente. Une majorité des modifications étaient liées à la syntaxe du code. Pour rendre la tâche plus aisée, j'ai utilisé des expressions régulières; ce sont des séquences de caractères qui définissent des motifs de recherche et qui sont particulièrement utiles pour remplacer un motif par un autre. Par exemple, en Fortran 77, le C ou c placé en début de ligne indique le début d'un commentaire, mais en Fortran 90 c'est un ! qui a cet usage. La figure \ref{fig:regex} montre une expression utilisée pour modifier ces commentaires dans le code.
+\subsubsection{Réécriture de code}Cette partie consistait donc à réécrire le code dans une norme plus récente. Une majorité des modifications étaient liées à la syntaxe du code. Pour rendre la tâche plus aisée, j'ai utilisé des expressions régulières; ce sont des séquences de caractères qui définissent des motifs de recherche et qui sont particulièrement utiles pour remplacer un motif par un autre. Par exemple, en Fortran 77, le C ou c placé en début de ligne indique le début d'un commentaire, mais en Fortran 90 c'est un ! qui a cet usage. La figure \ref{fig:regex} montre une expression utilisée pour modifier ces commentaires dans le code.
 
 \begin{figure}[ht]
   \centering
@@ -19,9 +20,9 @@ Après cette période et avant de commencer à développer une version en 3 dime
 
 L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et de m'éviter une tâche fastidieuse.
 
-\paragraph{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
+\subsubsection{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
 
-\paragraph{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (Hierarchical Data Format) qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (eXtensible Data Model and Format). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
+\subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permettent de structurer de grandes quantités de données. Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (\textit{eXtensible Data Model and Format}). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet notamment de définir un maillage et une topologie d'un domaine sur lesquels seront placés les valeurs contenues dans les fichiers HDF5.
 
 
 \begin{figure}[ht]
@@ -61,13 +62,20 @@ Une fois ces modifications terminées, et le comportement du programme validé, 
 
 %1/sqrt(2)*exp(-(coordsX/(2*sqrt(2)))^2)
 
-\paragraph{Calcul des gradients}Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'ils prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
+\subsubsection{Calcul des gradients}%Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'ils prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
 
+Les gradients permettent de calculer l'évolution spatiale des grandeurs physiques (densité, vitesse, énergie, etc.). Le gradient pour une fonction bidimensionnelle $f(x,y)$ était donc décrit comme suit:
+$$\nabla f(x,y) =\left(\frac{\partial f}{\partial x}(x,y),\frac{\partial f}{\partial y}(x,y)\right) $$
 
-\paragraph{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Pour palier ce problème, la méthode NSCBC(Navier-Strokes Characteristic Boundary Conditions) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
+En 3D, les fonctions devant être dérivé sont dépendantes de $(x,y,z)$ et il est nécessaire d'ajouter la dérivée sur l'axe $Z$:
+$$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}{\partial y}(x,y,z),\frac{\partial f}{\partial z}(x,y,z)\right)$$
 
-\paragraph{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement  celles nécessaires permettant de lancer les tests présentés dans la section suivante.
+Il existe plusieurs dérivées selon les conditions de la simulation (périodique, apériodique, symétrique); pour chacune de ces méthodes de dérivation, il a fallu prendre en compte qu'elle se réalisait maintenant sur un espace et non plus sur un plan. Il a également fallu ajouter les calculs de $\frac{\partial f}{\partial z}$ qui n'étaient pas présent dans cette version de NTMIX.
+
+\subsubsection{Conditions limites}\label{sec:nsbc}
+Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Pour palier ce problème, la méthode NSCBC (\textit{Navier-Strokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
+
+\subsubsection{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement  celles nécessaires permettant de lancer les tests présentés dans la section suivante.
 
 
 \paragraph{}TODO Cependant, plusieurs parties du code prévoyaient déjà le passage du code en 3 dimensions, ainsi la préparation des tableaux utilisés pour le calcul des gradients était présente et a facilité le travail. La librairie CHEMKIN est adimensionnée ce qui a permis d'ajouter une dimension sans avoir à modifier ses fonctions. 

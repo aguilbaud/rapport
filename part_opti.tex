@@ -9,7 +9,7 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
       \hline
       & Bullx & Lenovo \\
       \hline
-      Noeuds & 158 & 252 \\
+      Noeuds de calcul & 158 & 252 \\
       \hline
       Puissance crête & 53 TFlop/s & 242 TFlop/s \\
       \hline
@@ -19,7 +19,15 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
       \hline
       Processeurs & Intel Sandy Bridge bi-socket, 8 coeurs (2.6 GHz) & Intel Haswell bi-socket, 12 coeurs (2.5 GHz) \\
       \hline
-      Mémoire & 32 Go de mémoire cadencée à 1.6 GHz & 64 Go de mémoire cadencée à 2.133 GHz \\
+      Mémoire & 32 Go de mémoire cadencée à 1600 MHz & 64 Go de mémoire cadencée à 2133 MHz \\
+      \hline
+      Cache L1 & 32 Ko & 32 Ko \\
+      \hline
+      Cache L2 & 256 Ko & 256 Ko \\
+      \hline
+      Cache L1 & 20 Mo (partagé) & 30 Mo (partagé) \\
+      \hline
+      Bande passante inter-noeud & 5 Go/s & 6.4 Go/s \\
       \hline
     \end{tabular}
   \end{center}
@@ -41,7 +49,14 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 %\end{figure}
 
 \subsection{Métriques utilisées}
-Le temps d'exécution pour calculer un point pour un pas de temps ($\mu s/it/p$). Plus cette valeur est basse, plus le code est efficace. 
+\begin{itemize}
+\item Le temps passé pour calculer un point, par pas de temps. Cette mesure est exprimée en microsecondes par point par itération ($\mu s/it/p$). Plus cette valeur est basse, plus le code est efficace. 
+
+\item Le nombre d'opérations à virgule flottante par seconde (\textit{Flops: FLoating Point OPeration per Second}). Elle mesure le nombre d'opération par seconde utilisant des nombres réels (ou nombre à virgule flottante). Elle est utile pour vérifier si le code utilise toute la puissance de calcul possible.
+\end{itemize}
+
+
+
 
 \subsection{Performances séquentielles}
 Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 3 cas ont été définis; ils permettent de couvrir une plus grande partie du code; en effet chacun de ces cas utilise des parties du code différentes:
@@ -56,10 +71,10 @@ Dans chacun des tests, 2 espéces sont présentes. On part d'une taille de 20 po
 
 %Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
 \subsubsection{Parcours contigues des tableaux}
-Lorsque une donnée est utilisée dans le code, elle est copiée en mémoire cache (une mémoire à accées rapide). Suivant le principe de localité spatiale, l'accés à une donnée va probablement être suivie d'un accés à une donnée proche (Ex: parcours de boucle), une ligne de cache est en fait copiée dans la mémoire cache au lieu d'une seule donnée. 
+Lorsque une donnée est utilisée dans le code, elle est copiée en mémoire cache (une mémoire à accés rapide). Suivant le principe de localité spatiale, l'accés à une donnée va probablement être suivie d'un accés à une donnée proche (Ex: parcours de boucle), une ligne de cache est en fait copiée dans la mémoire cache au lieu d'une seule donnée. 
 Lorsque qu'on parcourt un tableau dans son ordre de stockage, les données nécessaires sont donc déjà dans le cache, ce qui permet de réduire les coût de transferts de données. En revanche, si on parcourt un tableau de façon non-contigue, et que NX et NZ sont de tailles conséquentes, un défaut de cache va se produire à chaque itération (la donnée nécessaire n'est pas présente en cache et la bonne ligne de cache va être copiée), ce qui entraîne un ralentissement de l'application à cause des temps de transfert.
 
-Dans les fonctions calculant les gradients, beaucoup de boucle réalisées des parcours de tableaux non contigues. En Fortran, les tableaux sont stockés en ``row
+Dans les fonctions calculant les gradients, beaucoup de boucle réalisaient des parcours de tableaux non contigues. En Fortran, les tableaux sont stockés en ``row major'' (fig. \ref{fig:rowmajor}). La figure \ref{fig:noncontiguous} montre l'exemple d'une boucle ne parcourant pas un tableau de façon contigue; en effet, la boucle interne fait varier la seconde dimension le plus vite, or, comme on le voit sur la figure , les éléments $a_{i,1}$ et $a_{i,2}$ ne sont pas placés à côté en mémoire. On peut donc inverser les 2 boucles pour régler ce problème.
 
 \begin{figure}[ht]
   \centering
@@ -73,42 +88,46 @@ Dans les fonctions calculant les gradients, beaucoup de boucle réalisées des p
       a_{m,1} & a_{m,2} & \cdots & a_{m,n} 
     \end{pmatrix}
     $
-  \end{subfigure}%
+  \end{subfigure}
+  \vspace{0.6cm}
   
   \begin{subfigure}[b]{1\textwidth}
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
       \hline
-      Address & 0 & 1  & & $m-1$ & $m$ & $m+1$ & & $2m-1$ &  & $(n-1)m$ & $(n-1)m+1$ & & $nm-1$ \\
+      %Address & 0 & 1  & & $m-1$ & $m$ & $m+1$ & & $2m-1$ &  & $(n-1)m$ & $(n-1)m+1$ & & $nm-1$ \\
+      Address & 0 & 1  & & $m-1$ & $m$ & $m+1$ &  & $nm-1$ \\
       \hline
-      Value & $a_{1,1}$ & $a_{2,1}$ & $\cdots$ & $a_{m,1}$ & $a_{1,2}$ & $a_{2,2}$ & $\cdots$ & $a_{m,2}$  & $\cdots$ & $a_{1,n}$ & $a_{2,n}$ & $\cdots$ & $a_{m,n}$ \\
+      Value & $a_{1,1}$ & $a_{2,1}$ & $\cdots$ & $a_{m,1}$ & $a_{1,2}$ & $a_{2,2}$ & $\cdots$ & $a_{m,n}$ \\
       \hline
       \end{tabular}
   \end{subfigure}
+  \caption{\label{fig:rowmajor}Stockage des tableaux en Fortran}
 \end{figure}
 
 \begin{figure}[h]
   \centering
   \begin{lstlisting}[language=Fortran]
-    DO JY=1,NY
-         DO JX=3,NX-2
+    DO JX=3,NX-2
+         DO JY=1,NY
             S(JX,JY) = (-U(JX-2,JY)
      +                   -28.D0*(U(JX-1,JY)-U(JX+1,JY))
-     +                  + U(JX+2,JY) ) * HX4_INV_X
+     +                   +U(JX+2,JY)) * HX4_INV_X 
+     +                 + DELT_SYM_X(JX) * S(JX-1,JY)
          END DO
     END DO
   \end{lstlisting}
-  \caption{\label{struct}Parcours non-contigue}
+  \caption{\label{fig:noncontiguous}Parcours non-contigue}
 \end{figure}
 
 
 
 \subsubsection{Vectorisation}
-L'application est constituée de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation. La vectorisation est présente sur les processeurs possédant des instructions SIMD (Single Instruction Multiple Data). On peut donc appliquer une opération sur plusieurs éléments à la fois au lieu d'un seul. Comme on peut le voir sur la figure \ref{fig:simd}, si on à une boucle calculant la somme de 2 tableaux, sans vectorisation, le processeurs réalisera une addition à la fois mais avec, il peut traiter plus d'éléments à la fois.
+L'application est constituée de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation. La vectorisation est présente sur les processeurs possédant des instructions SIMD (\textit{Single Instruction Multiple Data}). On peut donc appliquer une opération sur plusieurs éléments à la fois au lieu d'un seul. Comme on peut le voir sur la figure \ref{fig:simd}, si on à une boucle calculant la somme de 2 tableaux, sans vectorisation, le processeurs réalisera une addition à la fois mais avec, il peut traiter plus d'éléments à la fois.
 
-Les courbes nommées ``Base time'' sont des mesures réalisées sans aucune vectorisation mais avec des optimisations (option O2).
+Avant d'activer la vectorisation, des mesures de temps de référence ont été réalisées afin de fournir un temps de comparaison. Les courbes nommées ``Base time'' sur les figures suivantes représentent ce temps de référence (pas de vectorisation mais avec des optimisations).
 
-Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de traiter des vecteurs de 256 bits, soit 4 nombre double précision. Si les boucles réalise beaucoup de calculs, on peut donc esperer diviser le temps par 4. Sur BULL, c'est le jeu d'instruction AVX qui est disponible; il permet de traiter des vecteurs de 128 bits et le gain maximum est donc de 2. Cependant, comme on peut le constater sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, la vectorisation n'a entraînée qu'un gain d'entre 18 et 25\% selon le cas. Grâce à Intel Advisor, qui permet d'analyser les boucles qui ont été vectorisées, il est possible de voir que:
+Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de traiter des vecteurs de 256 bits, soit 4 nombre double précision. Si les boucles réalisent beaucoup de calculs, on peut donc esperer diviser le temps par 4. Sur BULL, c'est le jeu d'instruction AVX qui est disponible; il permet de traiter des vecteurs de 128 bits et le gain maximum est donc de 2. Cependant, comme on peut le constater sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, la vectorisation n'a entraînée qu'un gain d'entre 18 et 25\% selon le cas. Grâce à Intel Advisor, qui permet d'analyser les boucles qui ont été vectorisées, il est possible de voir que:
 \begin{itemize}
 \item Certaines fonctions dans lesquelles le programme passe beaucoup de temps ne sont pas vectorisée à cause de dépendances, nottamment dans le calculs des gradients. Dans ce cas, on est dépendant de la méthode utilisée pour ces calculs et on ne peut pas forcer la vectorisation de ces boucles.
 \item Beaucoup de petites boucles de calcul ne sont pas vectorisées. Ceci est dû à la structure de la mémoire du programme; tous les tableaux contennant des variables conservatives sont en réalité des sous-parties d'un plus grand tableaux. Lorsque des opérations sont effectuées sur ces tableaux, le compilateur assume qu'elle travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un nom et que le programme ne dépassera pas les limites d'un tableau. Cependant, comme on peut le voir sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, le gain est relativement faible (inférieur à 4\% par rapport aux temps avec la vectorisation seule); 
@@ -124,19 +143,19 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[page=1,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+    \includegraphics[page=1,scale=0.51]{gnuplot/bench_scalaire_nemo.pdf}
   \caption{\label{fig:bench_scal_nemo_nonper}}
   \end{subfigure}%
   ~
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[page=2,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+    \includegraphics[page=2,scale=0.51]{gnuplot/bench_scalaire_nemo.pdf}
   \caption{\label{fig:bench_scal_nemo_sym}}
   \end{subfigure}
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     %\includepdf[pages={2}]{gnuplot/bench_scalaire.pdf}
-    \includegraphics[page=3,scale=0.6]{gnuplot/bench_scalaire_nemo.pdf}
+    \includegraphics[page=3,scale=0.51]{gnuplot/bench_scalaire_nemo.pdf}
   \caption{\label{fig:bench_scal_nemo_per}}
   \end{subfigure}
   \caption{\label{fig:bench_scal_nemo}Temps par points des cas tests - LENOVO}
@@ -147,19 +166,19 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[page=1,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+    \includegraphics[page=1,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
   \caption{\label{fig:bench_scal_neptune_nonper}}
   \end{subfigure}%
   ~
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
-    \includegraphics[page=2,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+    \includegraphics[page=2,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
   \caption{\label{fig:bench_scal_neptune_sym}}
   \end{subfigure}
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     %\includepdf[pages={2}]{gnuplot/bench_scalaire.pdf}
-    \includegraphics[page=3,scale=0.6]{gnuplot/bench_scalaire_neptune.pdf}
+    \includegraphics[page=3,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
   \caption{\label{fig:bench_scal_neptune_per}}
   \end{subfigure}
   \caption{\label{fig:bench_scal_neptune}Temps par points des cas tests - BULL}
@@ -169,7 +188,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 
 
 \subsubsection{Alignement de la mémoire}
-Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d
+Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d'
 Cependant, les tableaux se trouvant dans les modules ne peuvent être aligné
 
 %\paragraph{durée=f(taille)}
@@ -178,7 +197,9 @@ Cependant, les tableaux se trouvant dans les modules ne peuvent être aligné
 \subsection{Performances parallèle}
 
 
-%\subsubsection{Méthode de communication}
+\subsubsection{Méthode de communication}
+Cette section traite des méthodes utilisée pour réaliser les communication entre les processus pour échanger les zones d'overlapping.
+
 %Avant de comparer les méthodes de recouvrement, je me suis dans un premier temps interréssé aux méthodes de communication utilisées pour la première méthode (\ref{sec:}). Pour cela, j'ai comparer la durée passée dans des communications pour chacune des méthode et ceux pour différentes taille de grille.
 
 
@@ -205,3 +226,9 @@ Pour une taille de problème fixée, on augmente le nombre de processus. Dans le
 Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augenter la taille globale du problème. Etant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
 
 
+
+
+%http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=D9B131203AACF6CB76730F3678DE81ED?doi=10.1.1.49.3513&rep=rep1&type=pdf
+
+
+%https://books.google.fr/books?hl=en&lr=&id=bsrkrw5MdtUC&oi=fnd&pg=PP2&dq=Numerical+computation+of+internal+and+external+flows&ots=a4zO-j_pzd&sig=2MOJYmYvrd2Tq55eL6ZsU3bmyoE&redir_esc=y#v=onepage&q=Numerical%20computation%20of%20internal%20and%20external%20flows&f=false

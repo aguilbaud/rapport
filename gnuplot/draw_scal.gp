@@ -6,7 +6,7 @@ set xlabel "Domain size"
 set grid y
 set grid x
 set yrange [0:5]
-set xrange [0:250]
+set xrange [0:400]
 set key bottom right
 
 stats 'scal_nonper_nemo' using 0 nooutput
