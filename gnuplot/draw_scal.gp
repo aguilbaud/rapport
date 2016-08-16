@@ -17,12 +17,9 @@ stats 'scal_sym_nemo' using 0 nooutput
 plot for [i=0:(STATS_blocks - 1)]  'scal_sym_nemo' index i t column w lp
 
 set title "Time per point (Periodic case)"
-set y2label "Speedup"
-set y2range [0:100]
-set y2tics 
 stats 'scal_per_nemo' using 0 nooutput
 plot for [i=0:(STATS_blocks - 2)]  'scal_per_nemo' index i t column w lp axes x1y1
-replot 'scal_per_nemo' index (STATS_blocks - 1) u 1:($2*100) t column w lp axes x1y2
+
 
 
 #NEPTUNE
@@ -38,3 +35,19 @@ plot for [i=0:(STATS_blocks - 1)]  'scal_sym_neptune' index i t column w lp
 set title "Time per point (Periodic case)"
 stats 'scal_per_neptune' using 0 nooutput
 plot for [i=0:(STATS_blocks - 1)]  'scal_per_neptune' index i t column w lp
+
+
+
+#Speedups
+set output "bench_scalaire_speedup_nemo.pdf"
+set title "Speedup Lenovo"
+set ylabel "Speedup"
+set yrange [0:2]
+
+plot for [i=0:2] 'scal_speedup_nemo' index i t column w lp
+
+
+set output "bench_scalaire_speedup_neptune.pdf"
+set title "Speedup Bullx"
+
+plot for [i=0:2] 'scal_speedup_neptune' index i t column w lp 
