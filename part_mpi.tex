@@ -203,13 +203,27 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
 
 
-
-
 Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est déterminer lors du découpage du domaine.
 
 Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais maintenant seul les sous-domaines avec bordures physique les appliqueront.
 
 %\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
+coucou yolo
+\begin{itemize}
+\item Aper
+\end{itemize}
+ $$3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) $$
+
+
+$$2\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} = \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)$$
+
+$$\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} + \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
+
+\begin{itemize}
+\item Sym
+\end{itemize}
+
+$$9\left( \frac{\partial u}{\partial x}\right) _{2} + 3\left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{4} \left( u_4 - u_2 \right) + 7 \left( u_3 - u_1 \right) \right)$$
 
 \subsection{Validation}
 
