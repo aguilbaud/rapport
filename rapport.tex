@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 \usepackage[francais]{babel}
 \usepackage[utf8]{inputenc}  
 \usepackage{listings}
@@ -12,13 +12,15 @@
 \usepackage{array}
 \usepackage{colortbl}
 \usepackage{amsfonts}
-\usepackage{geometry}
+
 \usepackage{setspace}
 \usepackage{hyperref}
 \usepackage{subcaption}
 \usepackage{listings}
-\usepackage{fullpage}
+%\usepackage{fullpage}
 \usepackage{amsmath}
+
+\usepackage[margin=1in]{geometry}
 
 \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
@@ -77,13 +79,13 @@
 \listoftables   % table des tableaux
 \null\cleardoublepage
 \include{intro}
-\cleardoublepage
+%\null\cleardoublepage
 \include{part_mig3D}
-\cleardoublepage
+%\null\cleardoublepage
 \include{part_mpi}
-\cleardoublepage
+%\null\cleardoublepage
 \include{part_opti}
-\cleardoublepage
+%\null\cleardoublepage
 \include{conclu}
 
 \appendix

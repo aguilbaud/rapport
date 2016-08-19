@@ -52,7 +52,14 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 \begin{itemize}
 \item Le temps passé pour calculer un point, par pas de temps. Cette mesure est exprimée en microsecondes par point par itération ($\mu s/it/p$). Plus cette valeur est basse, plus le code est efficace. 
 
-\item Le nombre d'opérations à virgule flottante par seconde (\textit{Flops: FLoating Point OPeration per Second}). Elle mesure le nombre d'opération par seconde utilisant des nombres réels (ou nombre à virgule flottante). Elle est utile pour vérifier si le code utilise toute la puissance de calcul possible.
+%\item Le nombre d'opérations à virgule flottante par seconde (\textit{Flops: FLoating Point OPeration per Second}). Elle mesure le nombre d'opération par seconde utilisant des nombres réels (ou nombre à virgule flottante). Elle est utile pour vérifier si le code utilise toute la puissance de calcul possible.
+
+\item Scalabilité forte: pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoût induit par un programme paralléle.
+$$E=\frac{t_1}{n\times t_n}$$
+\item Scalabilité faible: dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augenter la taille globale du problème. Etant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
+$$E=\frac{t_1}{t_i}$$ avec $t_i$ le temps d'exécution avec $i$ processus.
+
+
 \end{itemize}
 
 
@@ -60,10 +67,11 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 
 \subsection{Performances séquentielles}
 Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 3 cas ont été définis; ils permettent de couvrir une plus grande partie du code; en effet chacun de ces cas utilise des parties du code différentes:
+
 \begin{itemize}
-\item Cas périodique: le domaine de calcul est périodique
+\item Cas périodique: le domaine de calcul est périodique, aucun traitement n'est appliqué aux frontières de celui-ci
+\item Cas symétrique: les bordures reçoivent 
 \item Cas non-périodique: dans ce cas, les frontières sont traitées
-\item Cas symétrique: des méthodes de dérivations différentes sont utilisées
 \end{itemize}
 
 
@@ -201,13 +209,12 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \caption{\label{fig:bench_scal_speedups}Speedup finaux}
 \end{figure}
 
-
+Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on voit que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine 20 peut tenir entièrement dans le cache L3 de nemo (sec. \ref{}), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
 
 \subsubsection{Alignement de la mémoire}
 Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d'
 Cependant, les tableaux se trouvant dans les modules ne peuvent être aligné
 
-%\paragraph{durée=f(taille)}
 
 
 \subsection{Performances parallèle}
