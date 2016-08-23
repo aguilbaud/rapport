@@ -11,6 +11,7 @@
 \usepackage{pdfpages}
 \usepackage{array}
 \usepackage{colortbl}
+\usepackage{amsmath}
 \usepackage{amsfonts}
 
 \usepackage{setspace}
@@ -18,14 +19,14 @@
 \usepackage{subcaption}
 \usepackage{listings}
 %\usepackage{fullpage}
-\usepackage{amsmath}
+
 
 \usepackage[margin=1in]{geometry}
 
 \newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
 
-\renewcommand{\thesection}{\thepart .\arabic{section}}
+%\renewcommand{\thesection}{\thepart .\arabic{section}}
 
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -57,8 +58,8 @@
 }
 
 \makeatletter
-\renewcommand\thesection{}
-\renewcommand\thesubsection{\@arabic\c@section.\@arabic\c@subsection}
+%\renewcommand\thesection{}
+%\renewcommand\thesubsection{\@arabic\c@section.\@arabic\c@subsection}
 
 \makeatother
 
