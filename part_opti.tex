@@ -130,7 +130,7 @@ Dans les fonctions calculant les gradients, beaucoup de boucle réalisaient des 
 
 
 
-\subsubsection{Vectorisation}
+\subsubsection{Vectorisation}\label{fig:vecto}
 L'application est constituée de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation. La vectorisation est présente sur les processeurs possédant des instructions SIMD (\textit{Single Instruction Multiple Data}). On peut donc appliquer une opération sur plusieurs éléments à la fois au lieu d'un seul. Comme on peut le voir sur la figure \ref{fig:simd}, si on à une boucle calculant la somme de 2 tableaux, sans vectorisation, le processeurs réalisera une addition à la fois mais avec, il peut traiter plus d'éléments à la fois.
 
 Avant d'activer la vectorisation, des mesures de temps de référence ont été réalisées afin de fournir un temps de comparaison. Les courbes nommées ``Base time'' sur les figures suivantes représentent ce temps de référence (pas de vectorisation mais avec des optimisations).

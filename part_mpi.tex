@@ -3,10 +3,10 @@
 
 Comme vu dans l'introduction, l'objectif est de pouvoir exécuter cette application sur un maillage de taille conséquente ($\approx 10^9$ points) ce qui est impossible de faire sur un unique processeur; en effet, pour chaque point d'un maillage, au moins 5 variables conservatives doivent être stockées (densité, vitesses et l'énergie). Chacune de ces variables sont des nombres à virgule flottante en double précision (méthode utilisée pour représenter les nombre réels en informatique) occupant 8 octets. L'espace nécessaire pour stocker ces variables serait de $10^9 \times 5 \times 8 \approx 37.25$ Go, auquel il faudrait ajouter les $7.45$ Go par espèce chimique. Sachant qu'un des tests qui sera utilisé possédera 27 espèces, nous arrivons à un total de $37.25+27 \times 7.45\approx 238.42$ Go seulement pour stocker les variables nécessaires à la simulation auxquelles il faudrait encore ajouter les tableaux de travail.
 
-De plus, la charge de calcul serait colossale; j'ai mesuré le temps par points de la version séquentielle (\ref{}). On peut voir que pour un maillage d'environ 15 millions de points, le temps par point est de 4 $\mu$s. Dans le cas optimiste où la courbe n'augmenterait pas, un pas de temps pour $10^9$ points durerait $10^9\times4\times10^{-6}=4000$s ($\approx$ 1 heure 7 minutes). Une simulation de 10000 pas de temps durerait donc $4000\times10^4$ secondes $\approx$ 463 jours. (TODO: revoir le calcul avec les infos de bench)
+De plus, la charge de calcul serait colossale; les mesures de la version séquentielle présentées dans la section \ref{fig:vecto} montrent que pour un maillage d'environ 41 millions de points, le temps par point est de 4 $\mu$s. Dans le cas optimiste où la courbe n'augmenterait pas, un pas de temps pour $10^9$ points durerait $10^9\times4\times10^{-6}=4000$s ($\approx$ 1 heure 7 minutes). Une simulation de 10000 pas de temps durerait donc $4000\times10^4$ secondes $\approx$ 463 jours.
 
 \subsection{Décomposition de domaine}
-\paragraph{}Il est donc impératif de diviser la charge de travail ainsi que la mémoire utilisée par le programme afin d'arriver à des nombres plus raisonnables. Pour cela, il est possible de partitionner le domaine de la simulation en plusieurs sous-domaines, plus petits, et de réaliser les calculs de chaque sous-domaine sur des processus différents. 
+\paragraph{}Il est donc impératif de diviser la charge de travail ainsi que la mémoire utilisée par le programme afin d'arriver à des nombres plus raisonnables. Pour cela, il est possible de partitionner le domaine de la simulation en plusieurs sous-domaines, plus petits, et de réaliser les calculs de chaque sous-domaine sur des processus différents possédant chacun les données relatives à son sous-domaine. 
 
 MPI (\textit{Message Passing Interface}) décrit une librairie permettant de définir des topologies virtuelles et les transferts de données entre les nœuds d'une telle topologie et permettra donc de diviser le domaine selon une grille cartésienne de processus. Chaque case d'une telle topologie calculera une petite partie de la solution globale mais pourra le faire en parallèle des autres. La figure \ref{fig:globaldom} représente un domaine en 2D avec en bleu ses bordures physiques. La figure \ref{fig:globaldom} montre un partitionnement de ce domaine en 4 sous-domaines, chacun possédant de nouvelles bordures.
 
@@ -34,31 +34,86 @@ Dans le cas de NTMIX, il y a 2 cas différents pour la décomposition d'un domai
 \end{itemize}
 
 
+Pour clarifier la suite du rapport, il est nécessaire de définir les termes se rapportant aux différentes bordures:
+
+\begin{itemize}
+\item bordures physiques: ce sont les bordures \textbf{globales} du domaine de calcul; celles représentées en couleur sur la figure \ref{fig:globaldom}
+\item bordures internes: ce sont les bordures des différents sous-domaines induites par le partitionnement du domaine; celles en couleur sur la figure \ref{fig:partdom}. Elle ne contiennent pas les bordures physiques.
+\item bordures de recouvrement: ce sont les bordures des sous-domaines après avoir ajouté les zones de recouvrement; elles sont représentées en gris sur la figure \ref{fig:depdomover}
+\end{itemize}
+
 \subsection{Recouvrement de domaine}
-Cependant, chaque processus ne peut pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Une telle méthode implique que le gradient en un point est dépendant des valeurs de tous les autres points du champ. Comme on peut le voir sur la figure \ref{fig:depdom}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs. Concrètement, les sous-domaines devront s'échanger les données présentes sur leurs bordures. 
-%Pour cela, je testerai 2 méthodes avant de comparer leurs performances respectives.
+Cependant, chaque processus ne peut pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Pour les points ne se trouvant pas sur les bordures du domaine, la dérivée au point $u$ sur la direction $x$ est calculée grâce au schéma:
 
-%\paragraph{Méthode avec cellules fantômes}
- \paragraph{}Avec MPI, des communications devront se faire pour échanger ces données et il est nécessaire de réduire au maximum leur nombre. Pour cela, j'ai agrandi les sous-domaines en ajoutant des cases qui seront destinées au stockage d'une copie des données des domaines adjacents. Ces cases, appelées ``cellules fantômes'', sont représentées en gris sur la figure \ref{fig:depdomover} (ici la zone d'overlapping est représentée par une seule case pour la clarté du schéma mais la taille de cette zone peut varier).
-Cette méthode permet donc de limiter le nombre de communications entre les processus mais des calculs sont répliqués sur plusieurs processus; en effet les points contenus dans les zones grisées seront calculées pour préparer les variables avant le calcul des gradients 2 fois.
+\begin{equation}
+3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) 
+\end{equation}
 
 
+$\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 points la précédant et des 2 points la suivant ainsi que des dérivés des points l'encadrant. Une telle méthode implique donc que la dérivée en un point est dépendante des valeurs de tous les autres points du champ. Comme on peut le voir sur la figure \ref{fig:dependencies}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs, pouvant entraîner une perte de précision des résultats de la simulation. Ce problème numérique a fait l'objet d'études \cite{Stoessel:1994:DNS:199617.199626,Hirsch:1988:NCI:63653} et 2 approchent différentes peuvent être utilisées pour réaliser le recouvrement des sous-domaines:
+
+%https://books.google.fr/books?hl=fr&lr=&id=sSQuCwAAQBAJ&oi=fnd&pg=PR2&dq=An+Introduction+to+Domain+Decomposition+Methods:+Algorithms,+Theory,+and+Parallel+Implementation&ots=3Aw1t-fOlI&sig=MaXuwHgsiyS2KUyNnNVlbghQSBw&redir_esc=y#v=onepage&q=An%20Introduction%20to%20Domain%20Decomposition%20Methods%3A%20Algorithms%2C%20Theory%2C%20and%20Parallel%20Implementation&f=false
+\begin{itemize}
+\item 
+\item
+\end{itemize}
+
+Pour palier ce problème, il est nécessaire que les sous-domaines voisins se recouvrent afin que les dérivées des points se trouvant sur les bordures internes puissent être calculés plus précisément.
 
 \begin{figure}[h!]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \includegraphics[scale=0.15]{figures/depdomain.png}
-  \caption{\label{fig:depdom} }
+  \caption{\label{fig:dependencies} }
   \end{subfigure}%
   ~
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \includegraphics[scale=0.15]{figures/depdomain-overlap.png}
-  \caption{\label{fig:depdomover} }
+  \caption{\label{fig:depdomover} }	
   \end{subfigure}
-  \caption{\label{fig:domdep}Overlapping entre les sous-domaines}
+  \caption{\label{fig:domdep}Recouvrement entre les sous-domaines}
 \end{figure}
+
+ \paragraph{}Avec MPI, des communications devront se faire pour échanger ces données et il est nécessaire de réduire au maximum leur nombre. Pour cela, j'ai agrandi les sous-domaines en ajoutant des cases qui seront destinées au stockage d'une copie des données des domaines adjacents. Ces cases, appelées ``cellules fantômes'', sont représentées en gris sur la figure \ref{fig:depdomover} (ici la zone d'overlapping est représentée par une seule case pour la clarté du schéma mais la taille de cette zone peut varier).
+Cette méthode permet donc de limiter le nombre de communications entre les processus mais des calculs sont répliqués sur plusieurs processus; en effet les points contenus dans les zones grisées seront calculées pour préparer les variables avant le calcul des gradients 2 fois.
+
+\subsection{Traitement des bordures internes}
+Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
+
+
+Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est déterminer lors du découpage du domaine.
+
+Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais maintenant seul les sous-domaines avec bordures physique les appliqueront.
+
+%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
+
+La dérivation spatiale dans NTMIX est réalisé par le schéma de Padé d'ordre 6 \cite{Hirsch:1988:NCI:63653}:
+$$3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) $$
+
+
+Comme on peut le voir, la dérivée en un point dépend de 4 points (2 à gauche et 2 à droite) ainsi que de la valeur des dérivées de chaque côté. Cependant, sur les frontières du domaine, certaines de ces informations n'existent pas; une version descentrée du schéma de discrétisation est donc utilisée. Dans NTMIX, plusieurs schémas sont implémentés et sont utilisés en fonctions des propriétés physiques des bordures.
+
+Lorsque le domaine est partitionné, il faut donc utilise une schéma décentré ne prenant pas en compte les propriétés physiques des bordures \cite{Stoessel:1994:DNS:199617.199626} .
+
+
+
+\begin{itemize}
+\item Aper
+\end{itemize}
+ 
+
+
+$$2\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} = \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)$$
+
+$$\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} + \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
+
+\begin{itemize}
+\item Sym
+\end{itemize}
+
+$$9\left( \frac{\partial u}{\partial x}\right) _{2} + 3\left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{4} \left( u_4 - u_2 \right) + 7 \left( u_3 - u_1 \right) \right)$$
 
 
 %\paragraph{Méthode sans réplication de calcul}
@@ -212,41 +267,6 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 \paragraph{}Un déséquilibre de charge peut également apparaître lors de la phase d'initialisation, même si son impact peut être faible face à l'ensemble de la simulation, il est préférable de l'éviter. En effet, il faut éviter qu'un seul processus doive initialiser l'ensemble du domaine puis envoyer les informations calculées à tous les autres processus. Dans le cas de ce programme l'initialisation peut-être réalisée de manière indépendante (sans aucune synchronisaton). En effet, les initialisations simples (valeur d'une variable fournie dans le fichier de configuration) ne nécessitent aucun calcul. Les initialisations nécessitant des calculs sont en général basées sur la position physique des points du domaine et peuvent donc être réalisées en totale indépendance.
 
 
-\subsection{Traitement des bordures internes}
-Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
-
-
-Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est déterminer lors du découpage du domaine.
-
-Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais maintenant seul les sous-domaines avec bordures physique les appliqueront.
-
-%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
-
-La dérivation spatiale dans NTMIX est réalisé par le schéma de Padé d'ordre 6 \cite{Hirsch:1988:NCI:63653}:
-$$3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) $$
-
-
-Comme on peut le voir, la dérivée en un point dépend de 4 points (2 à gauche et 2 à droite) ainsi que de la valeur des dérivées de chaque côté. Cependant, sur les frontières du domaine, certaines de ces informations n'existent pas; une version descentrée du schéma de discrétisation est donc utilisée. Dans NTMIX, plusieurs schémas sont implémentés et sont utilisés en fonctions des propriétés physiques des bordures.
-
-Lorsque le domaine est partitionné, il faut donc utilise une schéma décentré ne prenant pas en compte les propriétés physiques des bordures \cite{Stoessel:1994:DNS:199617.199626} .
-
-
-
-\begin{itemize}
-\item Aper
-\end{itemize}
- 
-
-
-$$2\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} = \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)$$
-
-$$\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} + \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
-
-\begin{itemize}
-\item Sym
-\end{itemize}
-
-$$9\left( \frac{\partial u}{\partial x}\right) _{2} + 3\left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{4} \left( u_4 - u_2 \right) + 7 \left( u_3 - u_1 \right) \right)$$
 
 \subsection{Validation}
 
