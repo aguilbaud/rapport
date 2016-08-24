@@ -25,7 +25,7 @@ L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et 
 
 \subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permettent de structurer de grandes quantités de données. La figure \ref{fig:hdf5_struct} montre un exemple d'entête de fichier HDF5 généré par l'application; les ensemble X,Y et Z contiennent les coordonnées des points du domaine de calcul dans des tableaux monodimensionnels dont le type est précisé (ici des nombres à virgule flotante de 64 bits) et les autres datasets contiennent les valeurs des différentes variables de la simulation (ici dans dans des matrices).
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[scale=0.5]{figures/hdf5_struct.png}
   \caption{\label{fig:hdf5_struct} Structure d'un fichier HDF5}
@@ -35,7 +35,7 @@ Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visu
 
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[scale=0.3]{figures/thi-example.png}
   \caption{\label{fig:visu}Exemple de visualisation, Turbulence Homogène isotrope - ParaView}

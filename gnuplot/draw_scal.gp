@@ -9,6 +9,7 @@ set xrange [15:400]
 set key bottom right
 set xtics (20,30,45,68,102,153,230,345)
 
+set format x '%.0f^3'
 
 set title "Time per point (Non-periodic case)"
 stats 'scal_nonper_nemo' using 0 nooutput

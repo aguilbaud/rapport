@@ -69,8 +69,8 @@ Cependant, la mécanique des fluides numérique se base sur des versions discré
 Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes les échelles et intéragissent entre eux. Pour pouvoir simuler un tel comportement, il existe 3 approches différentes:
 
 \begin{itemize}
-\item la méthode de simulation directe (\textit{DNS: Direct Numerical Simulation}): elle consiste à utiliser un maillage plus fin que le plus petit tourbillon attendu
-\item la simulation des grandes échelles (\textit{LES: Large Eddy Simulation}): un modèle de turbulence est utilisé pour les plus petits tourbillons, permettant ainsi d'utiliser un maillage plus grossier
+\item la méthode de simulation directe (\textit{DNS: Direct Numerical Simulation}): elle consiste à utiliser un maillage plus fin que le plus petit tourbillon attendu (fig. \ref{fig:dns})
+\item la simulation des grandes échelles (\textit{LES: Large Eddy Simulation}): un modèle de turbulence est utilisé pour les plus petits tourbillons, permettant ainsi d'utiliser un maillage plus grossier (fig. \ref{fig:les})
 \item le moyennage temporel des équations de Navier-Stokes (\textit{RANS: Reynold Averaged Navier-Stokes Simulation})
 \end{itemize} 
 
@@ -80,13 +80,13 @@ Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes 
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \includegraphics[scale=0.35]{figures/DNS_Velocity_Field.png}
-    \caption{\label{fig:label} Simulation des turbulences (DNS)}
+    \caption{\label{fig:dns} Simulation des turbulences (DNS)}
   \end{subfigure}%
   ~
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
     \includegraphics[scale=0.35]{figures/DNS_Filtered_Velocity_Field_Large.png}
-    \caption{\label{fig:label} Simulation des grandes turbulences (LES)}
+    \caption{\label{fig:les} Simulation des grandes turbulences (LES)}
   \end{subfigure}
 \end{figure}
 
@@ -100,6 +100,6 @@ L'approche DNS est donc la plus coûteuse en terme de puissance de calcul néces
 \begin{itemize}
 \item Variables conservatives: ce sont les variables utilisées dans la simulation et qui sont soumises aux lois de conservation; conservation de l'énergie (masse) et conservation de la quantité de mouvement. Les variables conservatives se rapporteront donc ici à la densité, l'énergie et les vitesses selon toutes les directions.
 \item Champ: c'est l'association d'une valeur d'un paramètre à un point de l'espace ou du maillage. Il existe des \textbf{champs scalaires} qui associent une valeur (densité, pression, etc.) à chaque point et des \textbf{champs vectoriels} qui associent un vecteur (vitesse) à chaque point de l'espace.
-\item Gradient: c'est une opération réalisées sur un champ. C'est l'équivalent de la dérivée pour une fonction
+\item Gradient: c'est une opération réalisé sur un champ. C'est l'équivalent de la dérivée pour une fonction.
 
 \end{itemize}

@@ -1,9 +1,9 @@
 \section{Etude de performance et optimisations}\label{sec:part3}
 %\paragraph{}Je me suis finalement penché sur les performances de la version 3D de NTMIX développé au cours de ce stage. J'ai dans un premier temps étudié les performances séquentielles du programme (code tel qu'il était à la fin de la première partie) puis les performances de la version parallèle.
-\subsection{Présentation du matériel}
+\subsection{Présentation du matériel}\label{sec:matos}
 L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du CERFACS, le Bullx B510 (neptune) et le cluster LENOVO (nemo). Ils possèdent les caractéristiques suivantes:
 
-\begin{table}[h]
+\begin{table}[!ht]
   \begin{center}
     \begin{tabular}{|M{3.5cm}|M{5cm}|M{5cm}|}
       \hline
@@ -113,7 +113,7 @@ Dans les fonctions calculant les gradients, beaucoup de boucle réalisaient des 
   \caption{\label{fig:rowmajor}Stockage des tableaux en Fortran}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!ht]
   \centering
   \begin{lstlisting}[language=Fortran]
     DO JX=3,NX-2
@@ -133,6 +133,13 @@ Dans les fonctions calculant les gradients, beaucoup de boucle réalisaient des 
 \subsubsection{Vectorisation}\label{fig:vecto}
 L'application est constituée de nombreuses boucles de calculs parcourant les tableaux contenant les variables conservatives. Il semble donc être un bon candidat pour la vectorisation. La vectorisation est présente sur les processeurs possédant des instructions SIMD (\textit{Single Instruction Multiple Data}). On peut donc appliquer une opération sur plusieurs éléments à la fois au lieu d'un seul. Comme on peut le voir sur la figure \ref{fig:simd}, si on à une boucle calculant la somme de 2 tableaux, sans vectorisation, le processeurs réalisera une addition à la fois mais avec, il peut traiter plus d'éléments à la fois.
 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=1]{figures/simd.jpg}
+  \caption{\label{fig:simd} }
+\end{figure}
+
+
 Avant d'activer la vectorisation, des mesures de temps de référence ont été réalisées afin de fournir un temps de comparaison. Les courbes nommées ``Base time'' sur les figures suivantes représentent ce temps de référence (pas de vectorisation mais avec des optimisations).
 
 Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de traiter des vecteurs de 256 bits, soit 4 nombre double précision. Si les boucles réalisent beaucoup de calculs, on peut donc esperer diviser le temps par 4. Sur BULL, c'est le jeu d'instruction AVX qui est disponible; il permet de traiter des vecteurs de 128 bits et le gain maximum est donc de 2. Cependant, comme on peut le constater sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, la vectorisation n'a entraînée qu'un gain d'entre 18 et 25\% selon le cas. Grâce à Intel Advisor, qui permet d'analyser les boucles qui ont été vectorisées, il est possible de voir que:
@@ -147,7 +154,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
@@ -170,7 +177,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 \end{figure}
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
@@ -193,7 +200,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 \end{figure}
 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
@@ -209,7 +216,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \caption{\label{fig:bench_scal_speedups}Speedup finaux}
 \end{figure}
 
-Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on voit que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine 20 peut tenir entièrement dans le cache L3 de nemo (sec. \ref{}), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
+Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on voit que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine 20 peut tenir entièrement dans le cache L3 de nemo (sec. \ref{sec:matos}), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
 
 \subsubsection{Alignement de la mémoire}
 Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d'

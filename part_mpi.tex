@@ -5,13 +5,14 @@ Comme vu dans l'introduction, l'objectif est de pouvoir exécuter cette applicat
 
 De plus, la charge de calcul serait colossale; les mesures de la version séquentielle présentées dans la section \ref{fig:vecto} montrent que pour un maillage d'environ 41 millions de points, le temps par point est de 4 $\mu$s. Dans le cas optimiste où la courbe n'augmenterait pas, un pas de temps pour $10^9$ points durerait $10^9\times4\times10^{-6}=4000$s ($\approx$ 1 heure 7 minutes). Une simulation de 10000 pas de temps durerait donc $4000\times10^4$ secondes $\approx$ 463 jours.
 
+
 \subsection{Décomposition de domaine}
 \paragraph{}Il est donc impératif de diviser la charge de travail ainsi que la mémoire utilisée par le programme afin d'arriver à des nombres plus raisonnables. Pour cela, il est possible de partitionner le domaine de la simulation en plusieurs sous-domaines, plus petits, et de réaliser les calculs de chaque sous-domaine sur des processus différents possédant chacun les données relatives à son sous-domaine. 
 
-MPI (\textit{Message Passing Interface}) décrit une librairie permettant de définir des topologies virtuelles et les transferts de données entre les nœuds d'une telle topologie et permettra donc de diviser le domaine selon une grille cartésienne de processus. Chaque case d'une telle topologie calculera une petite partie de la solution globale mais pourra le faire en parallèle des autres. La figure \ref{fig:globaldom} représente un domaine en 2D avec en bleu ses bordures physiques. La figure \ref{fig:globaldom} montre un partitionnement de ce domaine en 4 sous-domaines, chacun possédant de nouvelles bordures.
+\paragraph{}MPI (\textit{Message Passing Interface}) décrit une librairie permettant de définir des topologies virtuelles et les transferts de données entre les nœuds d'une telle topologie et permettra donc de diviser le domaine selon une grille cartésienne de processus. Chaque case d'une topologie calculera une petite partie de la solution globale mais pourra le faire en parallèle des autres. La figure \ref{fig:globaldom} représente un domaine en 2D avec en bleu ses bordures physiques. La figure \ref{fig:globaldom} montre un partitionnement de ce domaine en 4 sous-domaines, chacun possédant de nouvelles bordures.
 
-Concrètement, chaque nœud de la topologie exécutera le même code mais sur des données différentes.
-\begin{figure}[h!]
+
+\begin{figure}[!ht]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
@@ -27,40 +28,27 @@ Concrètement, chaque nœud de la topologie exécutera le même code mais sur de
   \caption{\label{fig:dom}Partitionnement du domaine}
 \end{figure}
 
-Dans le cas de NTMIX, il y a 2 cas différents pour la décomposition d'un domaine:
-\begin{itemize}
-\item le cas périodique: ce cas, utilisé pour éliminer les problèmes décrits en section \ref{sec:nsbc}, ne possède donc pas de bordures physiques, le recouvrement doit également se produire sur les processus se trouvant en bord de la topologie.
-\item le cas non-périodique: dans ce cas les propriétés physique des bordures sont traitées et les processus se trouvant en bord de domaine ne possèdent donc pas de région d'overlapping.
-\end{itemize}
+
+\paragraph{}Cependant, comme vu dans l'introduction, les équations de Navier-Stokes sont résolues par l'application. Pour résoudre ces équations aux dérivées partielles (\textit{PDEs: Partial Differential Equations}) lorsque le domaine est partitionné, il faut utiliser des méthodes de décomposition de domaines. Ces sont des méthodes numériques permettant de résoudre des problèmes d'algèbre linéaire sur des machines parallèles, nottament dans le cadre des simulations scientifiques, en modifiant le traitement réalisé sur les bordures artificielles (bordures induites par la décomposition).\cite{dolean+jolivet+nataf}
 
 
-Pour clarifier la suite du rapport, il est nécessaire de définir les termes se rapportant aux différentes bordures:
+\subsubsection{Approche numérique}\label{sec:numerical_dom_decompo}
 
-\begin{itemize}
-\item bordures physiques: ce sont les bordures \textbf{globales} du domaine de calcul; celles représentées en couleur sur la figure \ref{fig:globaldom}
-\item bordures internes: ce sont les bordures des différents sous-domaines induites par le partitionnement du domaine; celles en couleur sur la figure \ref{fig:partdom}. Elle ne contiennent pas les bordures physiques.
-\item bordures de recouvrement: ce sont les bordures des sous-domaines après avoir ajouté les zones de recouvrement; elles sont représentées en gris sur la figure \ref{fig:depdomover}
-\end{itemize}
+\paragraph{}Chaque processus ne peut donc pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Pour les points ne se trouvant pas sur les bordures du domaine, la dérivée au point $u$ sur la direction $x$ est calculée grâce au schéma:
 
-\subsection{Recouvrement de domaine}
-Cependant, chaque processus ne peut pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Pour les points ne se trouvant pas sur les bordures du domaine, la dérivée au point $u$ sur la direction $x$ est calculée grâce au schéma:
-
-\begin{equation}
+\begin{equation}\label{eq:pade}
 3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) 
 \end{equation}
 
 
-$\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 points la précédant et des 2 points la suivant ainsi que des dérivés des points l'encadrant. Une telle méthode implique donc que la dérivée en un point est dépendante des valeurs de tous les autres points du champ. Comme on peut le voir sur la figure \ref{fig:dependencies}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs, pouvant entraîner une perte de précision des résultats de la simulation. Ce problème numérique a fait l'objet d'études \cite{Stoessel:1994:DNS:199617.199626,Hirsch:1988:NCI:63653} et 2 approchent différentes peuvent être utilisées pour réaliser le recouvrement des sous-domaines:
+$\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 points la précédant et des 2 points la suivant ainsi que des dérivézs des points l'encadrant. Une telle méthode implique donc que la dérivée en un point est dépendante des valeurs de tous les autres points du champ. 
 
-%https://books.google.fr/books?hl=fr&lr=&id=sSQuCwAAQBAJ&oi=fnd&pg=PR2&dq=An+Introduction+to+Domain+Decomposition+Methods:+Algorithms,+Theory,+and+Parallel+Implementation&ots=3Aw1t-fOlI&sig=MaXuwHgsiyS2KUyNnNVlbghQSBw&redir_esc=y#v=onepage&q=An%20Introduction%20to%20Domain%20Decomposition%20Methods%3A%20Algorithms%2C%20Theory%2C%20and%20Parallel%20Implementation&f=false
-\begin{itemize}
-\item 
-\item
-\end{itemize}
 
-Pour palier ce problème, il est nécessaire que les sous-domaines voisins se recouvrent afin que les dérivées des points se trouvant sur les bordures internes puissent être calculés plus précisément.
+ Comme on peut le voir sur la figure \ref{fig:dependencies}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs, pouvant entraîner une perte de précision des résultats de la simulation. Pour résoudre ce problème, il est nécessaire de créer des zones d'overlapping entre les différents sous-domaines, permettant ainsi d'avoir accés aux points nécessaires aux calculs des dérivées. Ces zones sont représentées en gris sur la figure \ref{fig:depdomover} (ici les zones de recouvrement sont représentées par une seule case pour la clarté du schéma mais la taille de ces zones dépend de la métode numérique utilisée).
 
-\begin{figure}[h!]
+
+
+\begin{figure}[!ht]
   \centering
   \begin{subfigure}[b]{0.5\textwidth}
     \centering
@@ -76,70 +64,78 @@ Pour palier ce problème, il est nécessaire que les sous-domaines voisins se re
   \caption{\label{fig:domdep}Recouvrement entre les sous-domaines}
 \end{figure}
 
- \paragraph{}Avec MPI, des communications devront se faire pour échanger ces données et il est nécessaire de réduire au maximum leur nombre. Pour cela, j'ai agrandi les sous-domaines en ajoutant des cases qui seront destinées au stockage d'une copie des données des domaines adjacents. Ces cases, appelées ``cellules fantômes'', sont représentées en gris sur la figure \ref{fig:depdomover} (ici la zone d'overlapping est représentée par une seule case pour la clarté du schéma mais la taille de cette zone peut varier).
-Cette méthode permet donc de limiter le nombre de communications entre les processus mais des calculs sont répliqués sur plusieurs processus; en effet les points contenus dans les zones grisées seront calculées pour préparer les variables avant le calcul des gradients 2 fois.
-
-\subsection{Traitement des bordures internes}
-Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordure entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
 
 
-Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est déterminer lors du découpage du domaine.
 
-Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS. Ce type de correction s'effectuait déjà sur un unique plan mais maintenant seul les sous-domaines avec bordures physique les appliqueront.
-
-%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
-
-La dérivation spatiale dans NTMIX est réalisé par le schéma de Padé d'ordre 6 \cite{Hirsch:1988:NCI:63653}:
-$$3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) $$
-
-
-Comme on peut le voir, la dérivée en un point dépend de 4 points (2 à gauche et 2 à droite) ainsi que de la valeur des dérivées de chaque côté. Cependant, sur les frontières du domaine, certaines de ces informations n'existent pas; une version descentrée du schéma de discrétisation est donc utilisée. Dans NTMIX, plusieurs schémas sont implémentés et sont utilisés en fonctions des propriétés physiques des bordures.
-
-Lorsque le domaine est partitionné, il faut donc utilise une schéma décentré ne prenant pas en compte les propriétés physiques des bordures \cite{Stoessel:1994:DNS:199617.199626} .
-
-
+\paragraph{}La mise en oeuvre efficace de l'approche numérique présentée ci-dessus sur les plates-formes parallèles a fait l'objet d'études \cite{Stoessel:1994:DNS:199617.199626,Hirsch:1988:NCI:63653} et la résolution par décomposition de domaine semble être la plus efficace. Le but est de résoudre localement le problème global. Le domaine est décomposé en sous-domaines se recouvrant. Nous nous intéressons ici aux 2 approches présentées dans l'étude \cite{Baum98dnsof}:
 
 \begin{itemize}
-\item Aper
+\item \textbf{Méthode Schwarz}: elle consiste à résoudre chaque sous-système avec les conditions limite de Diriclhet (conditions imposées aux limites d'une équation aux dérivées partielles permettant de specifier les valeurs que la solution doit prendre sur les bordures d'un domaine). Pour ça, la condition (\ref{eq:pade}) est modifiée sur les frontières par:
+
+\begin{equation}\label{eq:dirichlet}
+3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i}  = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) - 3 \delta u_{i+1}
+\end{equation}
+
+Le terme $3 \delta u_{i+1}$ est une approximation de la dérivée sur la frontière calculée par le domaine adjacent. Cette méthode nécessite donc un couplage fort entre les sous-domaines adjacents
+
+\item \textbf{Problème local modifié}: cette seconde méthode permet de réduire l'importance du couplage de la méthode précédente. Aux frontières des sous-domaines, le schéma utilisé pour les bordures physiques non-réfléchissantes est appliqué \cite{Stoessel:1994:DNS:199617.199626}. C'est un schéma décentré qui réduit donc la précision de la solution mais qui permet de calculer un pas complet de l'intégration de Runge-Kutta (sec. \ref{sec:comms}), sans aucun couplage entre les sous-domaines. Du fait de sa précision moindre, il est nécessaire d'utiliser des régions de recouvrement plus grandes qu'avec la méthode précédente.
 \end{itemize}
- 
 
 
-$$2\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} = \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)$$
 
-$$\left( \frac{\partial u}{\partial x}\right) _{1} + 4\left( \frac{\partial u}{\partial x}\right) _{2} + \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
+\subsubsection{Implémentation}
+Au niveau de l'implémentation avec \textit{MPI} de ces méthodes, la première implique des communications pendant chaque calcul de dérivée, nombreux dans le codes ($>100$ par pas de temps). La seconde méthode à l'avantage de grandement réduire le nombre de communications ($3$ par pas de temps) mais les communications seront plus grandes; en effet pour la première méthode, seule une variable conservative sera communiquée à la fois mais pour la seconde méthode, l'ensemble des variables conservatives seront transmises entre les processus adjacents. Lors de l'utilisation de \textit{MPI}, il est d'usage de réduire au maximum les syncronisations entre les processus afin de réduire les temps d'attente; c'est pour cette raison que la seconde méthode sera implémenté dans le code.
 
+
+%Pour clarifier la suite du rapport, il est nécessaire de définir les termes se rapportant aux différentes bordures:
+%
+%\begin{itemize}
+%\item bordures physiques: ce sont les bordures \textbf{globales} du domaine de calcul; celles représentées en couleur sur la figure \ref{fig:globaldom}
+%\item bordures internes: ce sont les bordures des différents sous-domaines induites par le partitionnement du domaine; celles en couleur sur la figure \ref{fig:partdom}. Elle ne contiennent pas les bordures physiques.
+%\item bordures de recouvrement: ce sont les bordures des sous-domaines après avoir ajouté les zones de recouvrement; elles sont représentées en gris sur la figure \ref{fig:depdomover}
+%\end{itemize}
+
+\paragraph{Calcul des gradients}
+Dans NTMIX, il existe 3 type de conditions limites (périodique, symmétrique et double-symmétrique). Pour ces 3 types de conditions, le schéma (\ref{eq:pade}) est appliqué sur les points $[3,n_x-2]$, indépendamment des conditions limites. Pour les points $[1,2]$ et $[n_x-1,n_x]$, le calcul des dérivées dépend de ces conditions limites. Cependant, pour chacune des conditions limites, une fonction différente réalise la dérivation sur l'ensemble $[1,n_x]$. Maintenant que le domaine est decomposé, il a fallu modifier cette façon de procéder car un sous-domaine ne posséde plus forcèment l'ensemble des bordures physiques et il est nécessaire d'appliquer les bons schémas de dérivation aux bordures internes. Pour cela, le calcul des dérivée a été éclaté en briques élémentaires. Le schéma \ref{fig:dfdx_decompo} montre l'idée générale derrière ce découpage. Le point d'entré correspond à l'appel de la fonction \textit{dfdx} permettant de réaliser la dérivation d'une variable d'un sous-domaine selon l'axe $x$. Les fonctions \textit{dfdx\_$\alpha$\_lower} et \textit{dfdx\_$\alpha$\_upper} correspondent aux schémas utilisés par la condition limite $\alpha$, respectivement sur les points $[1,2]$ et $[n_x-1,n_x]$. Les fonctions \textit{dfdx\_nrb\_lower} et \textit{dfdx\_nrb\_upper} correspondent aux schémas des bordures non réfléchissantes (\textit{NRB: Non-Reflecting Boundaries}) présentés en \ref{sec:numerical_dom_decompo}. $pos_x$ correspond à la position du sous-domaines selon l'axe $x$ et $nproc_x$ au nombre de sous-domaines sur l'axe $x$; $pos_x=1$ et $pos_x=nproc_x$ indiquent que le sous-domaine possède respectivement une bordure physique lower et upper.
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[scale=0.4]{figures/dfdx_decompo.pdf}
+  \caption{\label{fig:dfdx_decompo} Calcul de gradient dans le cas d'un domaine décomposé}
+\end{figure}
+
+
+\paragraph{Recouvrement de domaine}
+Dans le cas de NTMIX, il y a 2 cas différents pour la décomposition d'un domaine:
 \begin{itemize}
-\item Sym
+\item le cas périodique: ce cas, utilisé pour éliminer les problèmes décrits en section \ref{sec:nsbc}, ne possède donc pas de bordures physiques, le recouvrement doit également se produire sur les processus se trouvant en bord de la topologie. Chaque processus possédera 2 régions de recouvrement selon toutes les directions de la simulation.
+\item les cas non-périodique: dans ce cas les propriétés physique des bordures sont traitées et les processus se trouvant en bord de domaine ne possèdent pas de région d'overlapping.
 \end{itemize}
 
-$$9\left( \frac{\partial u}{\partial x}\right) _{2} + 3\left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{4} \left( u_4 - u_2 \right) + 7 \left( u_3 - u_1 \right) \right)$$
+
+\subsubsection{Traitement des bordures internes}
+Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordures entre sous-domaines et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
 
 
-%\paragraph{Méthode sans réplication de calcul}
-%La seconde méthode consiste à ne pas répliquer les calculs sur plusieurs sous-domaines. Pour cela, les zones d'overlapping ne sont donc pas créées et les échanges de données se font seulement au moment du calcul des gradients. Les sous-domaines reçoivent ainsi les données nécessaires quand ils en ont besoin. Cette méthode réduit donc les calculs réalisés par chacun des sous-domaines mais augmente grandement la quantité de communications.
+Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilitées numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appellé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est attribuée aux processus lors du découpage du domaine.
 
-%\paragraph{}J'ai donc ajouter ces méthodes au programme pour pouvoir comparer leurs performances respectives. La première méthode a l'avantage de reduire la fréquence des communications en dupliquant des calculs sur plusieurs processus (augmentant donc le côut de ceux-ci).
+Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS, dans la fonction \textit{impose\_boundary\_conditions} (algo \ref{algo:time_step}). Ce type de correction s'effectuait déjà sur un unique plan mais maintenant, seul les sous-domaines avec des bordures physique les appliqueront.
 
 
-\subsection{Communications}
-%Le fait que les sous-domaines issus de la décomposition ne soient pas totalement indépendant implique que des points de synchronisation doivent se mettre en place entre eux. En effet, il es nécessaire que de l'information transite entre les sous-domaines pour le calcul du pas de temps ou pour l'échange des cellules fantômes.
+\subsection{Communications}\label{sec:comms}
+
+TODO: pour l(histoire des coins, si MPI neighbor all2all, on a pas de garanti sur l'ordre des communication donc il faut ajouter des communications pour les coins
+avec la version fait-maison, on fait pareil wallah pour pas avoir a tout recoder, bismillah
 
 \subsubsection{Calcul du pas de temps}
 Dans la version séquentielle de NTMIX, un pas de temps maximum, permettant de garantir la stabilité de la simulation, est calculé sur l'ensemble du domaine.
 Dans la version parallèle, chaque sous-domaine calcule son pas de temps maximal et une opération de réduction est utilisée pour trouver le minimum global. Elle permet de trouver le pas de temps minimal entre tous les sous-domaines et de le distribuer sur tous les processus.
 
-%\paragraph{}Dans la version séquentielle, un pas de temps maximal est calculé dans le but d'assurer la stabilité de l'algorithme. Ce calcul est donc dépendant de l'ensemble du domaine. Dans la version parallèle, chaque processus devra donc calculer le pas de temps maximal de son sous-domaine et le communiquer aux autres afin de trouver le pas de temps global (opération de réduction).
+\subsubsection{Transfert des points de recouvrement}
 
-\subsubsection{Transfert des cellules fantômes}
+Du fait de la discrétisation temporelle dans la simulation, une méthode de Runge-Kutta est utilisée pour réaliser la dérivation temporelle. C'est une méthode itérative; une première estimation de la solution est utilisée pour calculer une seconde estimation plus précise, et ainsi de suite \cite{Hirsch:1988:NCI:63653}. Dans NTMIX, 3 itérations sont réalisées à chaque pas de temps.
+Comme vu dans la section précédente, la méthode de décomposition de domaine choisie permet de calculer une itération complete. Il est donc nécessaire que les transferts des zones d'overlapping se fassent avant chaque appel à ces itérations afin que le calcul de l'intégration puisse se faire. Une fonction \textit{update} réalisera les communications et sera appelée avant chaque itération de RHS (algo \ref{algo:time_step}).
 
-
-%Les 2 méthodes permettant le transfert des données entre les sous-domaines présentées dans la section précédente impliquent des communications différentes; autant dans la quantité de données échangées et dans 
-
-
-Du fait de la discrétisation du temps dans la simulation, une méthode de Runge-Kutta est utilisée pour réaliser la dérivation temporelle. C'est une méthode itérative; une première estimation de la solution est utilisée pour calculer une seconde estimation plus précise, et ainsi de suite \cite{Hirsch:1988:NCI:63653}. Dans NTMIX, 3 itérations sont réalisées à chaque pas de temps.
-Il est donc nécessaire que les transferts des zones d'overlapping se fassent avant chaque appel à ces itérations afin que le calcul de l'intégration puisse se faire. Pour cela, j'ai créé une fonction update qui est appelée avant chaque itération de RHS (algo \ref{algo:time_step}).
-%Dans RHS, toutes les variables conservatives subissent le calcul. 
 
 \begin{algorithm}
   \caption{time\_step}
@@ -159,47 +155,41 @@ Il est donc nécessaire que les transferts des zones d'overlapping se fassent av
 
 
 
-Chaque processus doit envoyer ses bordures à tous ses voisins dans la topologie virtuelle (fig. \ref{fig:comm}). MPI fournit une fonction permettant de réaliser ce type de communication; MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction gère automatiquement la répartition des buffers à envoyer aux voisins selon leur disposition sur la topologie. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
+\paragraph{}Dans cette fonction, chaque processus doit envoyer ses bordures à tous ses voisins dans la topologie virtuelle (fig. \ref{fig:comm}). MPI fournit une fonction permettant de réaliser ce type de communication; MPI\_Neighbor\_alltoallv \cite{mpi-3.0}. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction gère automatiquement la répartition des buffers à envoyer aux voisins selon leur disposition sur la topologie. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
 
-\begin{figure}[h!]
-  \centering
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-     \fbox{\includegraphics[scale=0.12]{figures/comms_dim1.png}}
-  \caption{\label{fig:comm_dim1}}
-  \end{subfigure}%
-  ~
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-     \fbox{\includegraphics[scale=0.12]{figures/comms_dim2.png}}
-  \caption{\label{fig:comm_dim2}}
-  \end{subfigure}
-  \caption{\label{fig:comm}Communications}
-\end{figure}
-
-%\begin{figure}[h!]
+%\begin{figure}[!ht]
 %  \centering
-%  \includegraphics[scale=0.15]{figures/domain-overlap-comms.png}
-%  \caption{\label{fig:comms} }
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%     \fbox{\includegraphics[scale=0.12]{figures/comms_dim1.png}}
+%  \caption{\label{fig:comm_dim1}Echanges des zones de recouvrement sur la direction $x$}
+%  \end{subfigure}%
+%  ~
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%     \fbox{\includegraphics[scale=0.12]{figures/comms_dim2.png}}
+%  \caption{\label{fig:comm_dim2}Echanges des zones de recouvrement sur la direction $y$}
+%  \end{subfigure}
+%  \caption{\label{fig:comm}Echanges des zones de recouvrement}
 %\end{figure}
 
-%Je m'intéresse ici aux méthodes de communications utilisées dans la première méthode présentée ci-dessus. En effet la seconde méthode d'overlapping n'induit qu'au plus 2 communications par processus par calcul de gradients et ne pose donc pas de problèmes particuliers. En revanche, pour la première méthode il faut effectuer au plus 2x3 communications par appel à la fonction update Sur la figure \ref{fig:neighbor_buf}, on peut voir en orange les ``cellules fantômes'' qui recevront les valeurs voisines et en vert les valeurs qui seront envoyées aux processus voisins. J'ai testé plusieurs de communications pour comparer leurs performance. J'ai dans un premier temps utilisé la fonction MPI\_Neighbor\_alltoallv. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction s'occupe elle-même d'envoyer la bonne partie du buffer au bon voisin selon leur disposition sur la grille cartésienne. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.12]{figures/domain-overlap-comms.png}
+  \caption{\label{fig:comm} }
+\end{figure}
 
 
-\begin{figure}[h!]
+
+\begin{figure}[!ht]
   \centering
   \includegraphics[scale=0.3]{figures/neighbor_pos.png}
   \caption{\label{fig:neighbor_pos}Positions des valeurs des voisins}
 \end{figure}
 
-\paragraph{}Cependant cette fonction est relativement récente et peut ne pas être disponible dans les implémentation de MPI présentes sur certains calculateurs qui seront utilisés. Il m'a donc été demandé d'implémenter une seconde méthode dans un soucis de portabilité. C'est une implémentation triviale de la fonction MPI\_Neighbor\_alltoallv \ref{algo:update}; on parcourt les dimensions du domaine, et pour chaque dimension, on effectue 2 envois et 2 réceptions dans la direction correspondant à cette dimension.
+\paragraph{}Cependant cette fonction est relativement récente \cite{mpi-3.0} [21 septembre 2012] et peut ne pas être disponible dans les implémentation de MPI présentes sur certains calculateurs qui seront utilisés. Il m'a donc été demandé d'implémenter une seconde méthode dans un soucis de portabilité. C'est une implémentation triviale de la fonction MPI\_Neighbor\_alltoallv (algo. \ref{algo:update}); on parcourt les dimensions du domaine, et pour chaque dimension, on effectue 2 envois et 2 réceptions dans la direction correspondant à cette dimension.
 
-%\paragraph{}Le coût d'une telle méthode ne se résume donc pas simplement aux coûts de communications mais aussi aux nombreuses copies réalisées pour créer le buffer d'envoi et pour ``éclater'' le buffer de réception. Ce coût sera donc étudié dans la partie suivante.
 
-%\paragraph{Seconde méthode}
-%C'est dans la fonction RHS que les calculs de gradient sont réalisés. Il existe plusieurs méthodes de dérivations selon les propriétés physiques du domaine. C'est dans ses fonctions de dérivations que les communications sont réalisées. Pour chaque méthode de dérivation, il existe 3 fonctions permettant la dérivation sur les 3 axes du domaine. Ces fonctions reçoivent en entrée les valeurs du champ devant être dérivé. Contrairement à la méthode précédente, les communications transmettront moins de donnée (1 seule variable conservative à la fois ici contre les 5 variables plus les espèces dans la première méthode). 
-
-%Il est donc possible de savoir, selon la fonction utilisée, avec quels voisins les communications se feront; par exemple, si la dérivée se fait sur l'axe X (fig. \ref{fig:comm_dim1}), le processus devra réaliser 2 envois et 2 réceptions dans cette direction.  TODO point2point comms
 
 \begin{algorithm}
   \caption{update}
@@ -219,7 +209,6 @@ Chaque processus doit envoyer ses bordures à tous ses voisins dans la topologie
 
 
 
-
 \subsection{Équilibrage de charge}
 Lors d'un tel découpage de domaine, il est nécessaire de s'assurer que la quantité de travail réalisée par chaque processus est semblable à celle des autres. Le but est donc de distribuer le même nombre de mailles sur chaque processus. Dans le cas d'un domaine périodique ce problème n'apparaît pas car chaque processus posséde des regions d'overlapping dans toutes les directions. Cependant, si le domaine possède des frontières physique, certains sous-domaines n'auront pas le même besoin d'overlapping.
 
@@ -228,13 +217,13 @@ Lors d'un tel découpage de domaine, il est nécessaire de s'assurer que la quan
 Si on ajoute la taille totale de l'overlapping avant de découper le domaine, les tailles des domaines internes varient selon les processus mais la taille globale (domaine interne + overlapping) est identique. Toujours avec l'exemple précédent, si on ajoute la taille de l'overlapping à la taille globale, on obtient un domaine global de $124\times124\times124$ points (sur une dimension, les 2 processus se situant aux extrémités possédent 1 seule région d'overlapping tandis que les 2 autres ont eux 2 régions $(2+2+1+1)\times4=24$) . On divise ensuite ce domaine entre les processus et on obtient cette fois-ci une seule classe de sous-domaines de $31\times31\times31$ points. On joue ici sur la taille du domaine interne pour équilibrer la charge. Un sous-domaine se trouvant sur un coin aura un domaine interne de $27\times27\times27$ alors qu'un sous-domaine de classe A aura $23\times23\times23$ point sur son domaine interne.
 
 
-\begin{figure}[h!t]
+\begin{figure}[!ht]
   \centering
   \includegraphics[scale=0.3]{figures/domain_dese.png}
   \caption{\label{fig:domain_desequilibre}Classes de sous-domaines}
 \end{figure}
 
-\begin{table}[h!]
+\begin{table}[!ht]
   \begin{center}
     \begin{tabular}{|P{2cm}|P{3.5cm}|P{3.5cm}|}
       \hline
@@ -249,7 +238,7 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 \end{table}
 
 
-\begin{table}[h!]
+\begin{table}[!ht]
   \begin{center}
     \begin{tabular}{|P{2cm}|P{3.5cm}|P{3.5cm}|}
       \hline
@@ -268,6 +257,18 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 
 
 
+%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
+
+
+%
+%= \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)$$
+%
+% \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
+%
+%
+%= \frac{1}{h}\left( \frac{1}{4} \left( u_4 - u_2 \right) + 7 \left( u_3 - u_1 \right) \right)$$
+
+
 \subsection{Validation}
 
 \paragraph{Cas d'un unique processus}Avant de tester la validité du programme avec plusieurs processus, il est nécessaire de s'assurer qu'il peut être lancé avec un seul processus et que les résulats fournis sont identiques à la version 3D validée à la section \ref{sec:3D-validation}. Même si ce test paraît trivial, il est important de le faire. Il sera également utile de comparer le temps pris par ce test par rapport au temps de la version 3D séquentielle pour estimer le surcôut pouvant être induit par l'utilisation de MPI.
@@ -275,7 +276,7 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 \paragraph{Cas avec décomposition de domaine}
 Comme vu dans la section \ref{sec:p2-tr} le calcul des gradients est dépendant de l'ensemble du domaine. Pour s'assurer de l'exactitude des résultats obtenus dans cette version MPI, j'ai donc utiliser un overlapping assez grand permettant d'obtenir une precision numérique suffisante. J'ai ensuite calculer les valeurs moyennes des champs de la solution afin de les comparer avec ceux obtenus avec la version séquentielle du programme (\ref{sec:3D-validation}).
 
-\begin{table}[h]
+\begin{table}[!ht]
   \begin{center}
     \begin{tabular}{|c|c|c||c|c|c|c||c|c|c|}
       \hline
@@ -285,6 +286,6 @@ Comme vu dans la section \ref{sec:p2-tr} le calcul des gradients est dépendant 
       \hline
     
     \end{tabular}
-    \caption{\label{arr:overlap_res} Résultats obtenus}
+    \caption{\label{arr:valid_overlap} Résultats obtenus}
   \end{center}
 \end{table}
