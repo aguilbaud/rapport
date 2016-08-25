@@ -42,31 +42,31 @@ Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN ut
 Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de tourner sur de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
 
 
-\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procèder par étapes; dans un premier temps, je devrais moderniser le code avant de développer une version 3D de celui-ci. Cette première partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents.\ref{sec:part1}
+\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrais moderniser le code avant de développer une version 3D de celui-ci. Cette première partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents.\ref{sec:part1}
 
-Dans une seconde partie, je m'interesserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.\ref{sec:part2}
+Dans une seconde partie, je m'intéresserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.\ref{sec:part2}
 
 Enfin, je mesurerai les performances de NTMIX sur les calculateurs internes du Cerfacs afin d'essayer de tirer les meilleurs performances possibles.\ref{sec:part3}
 
-\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liès à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs présents au Cerfacs.
+\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs présents au Cerfacs.
 
 \subsection{Présentation de la mécanique des fluides}
 \subsubsection{Mécanique des fluides numérique}
-La \textbf{mécanique des fluides} est l'étude du comportement des fluides (liquides, gaz et plasma) lorsqu'ils sont en mouvement et est un domaine actif de recherche nottament en mécanique des fluides numérique (\textit{ou CFD}). Ce sous-domaine s'interesse à l'étude des mouvements par la \textbf{résolution numérique} des équations régissant les fluides. Les équations les plus utilisées sont:
+La \textbf{mécanique des fluides} est l'étude du comportement des fluides (liquides, gaz et plasma) lorsqu'ils sont en mouvement et est un domaine actif de recherche notamment en mécanique des fluides numérique (\textit{ou CFD}). Ce sous-domaine s'intéresse à l'étude des mouvements par la \textbf{résolution numérique} des équations régissant les fluides. Les équations les plus utilisées sont:
 
 \begin{itemize}
-\item les équations d'Euler dans le cas des fluides parfaits; elle ne prennent pas en compte la viscosité et la conductivé thermique
+\item les équations d'Euler dans le cas des fluides parfaits; elle ne prennent pas en compte la viscosité et la conductivité thermique
 \item les équations de Navier-Stokes dans le cas des fluides newtoniens
 \end{itemize}
 
 
 Dans le cas de NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées partielles sont résolues.
 
-Cependant, la mécanique des fluides numérique se base sur des versions discrétisées de ces équations. Pour NTMIX, le domaine de calcul (espace) est divisé en volumes élémentaires (discrétisation spatiale) selon une approche structurée (maillage structuré) qui consiste à découper l'espace en cellules régulièrement éspacées selon toutes les directions du domaine.
+Cependant, la mécanique des fluides numérique se base sur des versions discrétisées de ces équations. Pour NTMIX, le domaine de calcul (espace) est divisé en volumes élémentaires (discrétisation spatiale) selon une approche structurée (maillage structuré) qui consiste à découper l'espace en cellules régulièrement espacées selon toutes les directions du domaine.
 
 
 \subsubsection{Modèle de turbulence}
-Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes les échelles et intéragissent entre eux. Pour pouvoir simuler un tel comportement, il existe 3 approches différentes:
+Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes les échelles et interagissent entre eux. Pour pouvoir simuler un tel comportement, il existe 3 approches différentes:
 
 \begin{itemize}
 \item la méthode de simulation directe (\textit{DNS: Direct Numerical Simulation}): elle consiste à utiliser un maillage plus fin que le plus petit tourbillon attendu (fig. \ref{fig:dns})
@@ -90,9 +90,7 @@ Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes 
   \end{subfigure}
 \end{figure}
 
-L'approche DNS est donc la plus coûteuse en terme de puissance de calcul nécessaire étant donné qu'aucun modèle de turbulence n'est utilisé contrairement à la méthode LES qui ne simule que les tourbillons les plus grand. Les domaines d'applications de ces différentes méthodes sont donc différents; l'approche DNS ets plutot réservée à la recherche du fait des coûts élevés de telles simulations tandis que les méthodes LES et RANS sont plus adaptées à un contexte industriel.
-
-\subsubsection{La combustion turbulente}
+L'approche DNS est donc la plus coûteuse en terme de puissance de calcul nécessaire étant donné qu'aucun modèle de turbulence n'est utilisé contrairement à la méthode LES qui ne simule que les tourbillons les plus grand. Les domaines d'applications de ces différentes méthodes sont donc différents; l'approche DNS est plutôt réservée à la recherche du fait des coûts élevés de telles simulations tandis que les méthodes LES et RANS sont plus adaptées à un contexte industriel.
 
 
 \subsubsection{Vocabulaire lié à la CFD}

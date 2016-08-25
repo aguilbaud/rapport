@@ -204,7 +204,7 @@ Comme vu dans la section précédente, la méthode de décomposition de domaine 
 \end{figure}
 
 
-\paragraph{}Cependant, comme on peut le voir sur la figure \ref{fig:comm_dim2}, cette fonction ne permet pas d'échanger les coins restés en gris. Pour palier ce problème, il est possible d'ajouter des communications en diagonal (fig. \ref{fig:comm_diag}) qui permettront le transfert de ces coins. Il est également possible de réaliser les communications illustrées par la figure \ref{fig:comm4}. L'avantage de cette seconde option est qu'elle simplifie grandement le code par rapport aux communications en diagonales en réduisant également le nombre de communications; en effet, en 3D, avec la première méthode, un processus devrait réaliser 8 communications pour récupérer ses coins mais avec la seconde, seuleument 2 communications suffisent.
+\paragraph{}Cependant, comme on peut le voir sur la figure \ref{fig:comm_dim2}, cette fonction ne permet pas d'échanger les coins restés en gris. Pour palier ce problème, il est possible d'ajouter des communications en diagonal (fig. \ref{fig:comm_diag}) qui permettront le transfert de ces coins. Il est également possible de réaliser les communications illustrées par la figure \ref{fig:comm4}. L'avantage de cette seconde option est qu'elle simplifie grandement le code par rapport aux communications en diagonales en réduisant également le nombre de communications; en effet, en 3D, avec la première méthode, un processus devrait réaliser 8 communications pour récupérer ses coins mais avec la seconde, seulement 2 communications suffisent.
 
 \begin{figure}[!ht]
   \centering
@@ -253,7 +253,7 @@ Lors d'un tel découpage de domaine, il est nécessaire de s'assurer que la quan
   
 Si on ajoute la taille totale du recouvrement avant de découper le domaine, les tailles des domaines internes varient selon les processus mais la taille globale (domaine interne + recouvrement) est identique. Toujours avec l'exemple précédent, si on ajoute la taille de recouvrement à la taille globale, on obtient un domaine global de $124\times124\times124$ points (sur une dimension, les 2 processus se situant aux extrémités possédent 1 seule zone de recouvrement tandis que les 2 autres ont eux 2 régions $(2+2+1+1)\times4=24$) . On divise ensuite ce domaine entre les processus et on obtient cette fois-ci une seule classe de sous-domaines de $31\times31\times31$ points. On joue ici sur la taille du domaine interne pour équilibrer la charge. Un sous-domaine se trouvant sur un coin aura un domaine interne de $27\times27\times27$ alors qu'un sous-domaine de classe A aura $23\times23\times23$ point sur son domaine interne.
 
-Cependant, ces découpages ne prennent pas en compte les communnications réalisées entre les différents sous-domaines. Comme il est difficile de prévoir l'importance du coût des communications face au coût des calculs, ces 2 méthodes seront étudiées dans la partie suivante, afin d'essayer de détérminer laquelle convients le mieux lors d'une utilisation réelle de l'application.
+Cependant, ces découpages ne prennent pas en compte les communications réalisées entre les différents sous-domaines. Comme il est difficile de prévoir l'importance du coût des communications face au coût des calculs, ces 2 méthodes seront étudiées dans la partie suivante, afin d'essayer de déterminer laquelle convient le mieux lors d'une utilisation réelle de l'application.
 
 \begin{figure}[!ht]
   \centering

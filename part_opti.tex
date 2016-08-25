@@ -1,7 +1,7 @@
 \section{Etude de performance et optimisations}\label{sec:part3}
 %\paragraph{}Je me suis finalement penché sur les performances de la version 3D de NTMIX développé au cours de ce stage. J'ai dans un premier temps étudié les performances séquentielles du programme (code tel qu'il était à la fin de la première partie) puis les performances de la version parallèle.
 \subsection{Présentation du matériel}\label{sec:matos}
-L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du Cerfacs, le Bullx B510 (neptune) et le cluster LENOVO (nemo). Ils possèdent les caractéristiques suivantes:
+L'ensemble des tests suivants ont été réalisés sur les calculateurs internes du Cerfacs, le Bullx B510 et le cluster LENOVO. Ils possèdent les caractéristiques suivantes:
 
 \begin{table}[!ht]
   \begin{center}
@@ -51,20 +51,20 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 
 
 \subsection{Performances séquentielles}
-Dans cette partie, on s'interresse au programme testé et fonctionnel présenté dans la première partie. Avant de commmencer à profiler l'application, 3 cas ont été définis; ils permettent de couvrir une plus grande partie du code; en effet chacun de ces cas utilise des parties du code différentes:
+Dans cette partie, on s'intéresse au programme testé et fonctionnel présenté dans la première partie. Avant de commencer à profiler l'application, 3 cas ont été définis; ils permettent de couvrir une plus grande partie du code; en effet chacun de ces cas utilise des parties du code différentes:
 
 \begin{itemize}
 \item Cas périodique: le domaine de calcul est périodique, aucun traitement n'est appliqué aux frontières de celui-ci
 \item Cas symétrique: les bordures physiques sont traitées avec \textit{NSCBC} 
-\item Cas non-périodique: les bordures physiques sont traitées avec \textit{NSCBC} et un schéma descentré est utilisé 
+\item Cas non-périodique: les bordures physiques sont traitées avec \textit{NSCBC} et un schéma décentré est utilisé 
 \end{itemize}
 
 
-Dans chacun des tests, 2 espéces sont présentes. On part d'une taille de 20 points de coté (donc la taille du domaine est de $20\times20\times20$ points) et on l'augmente par pas de 50\%. Pour chacune de ces taille de domaine, on réalise 20 itérations et on calcule la moyenne des temps par points de celles-ci.
+Dans chacun des tests, 2 espèces sont présentes. On part d'une taille de 20 points de coté (donc la taille du domaine est de $20\times20\times20$ points) et on l'augmente par pas de 50\%. Pour chacune de ces taille de domaine, on réalise 20 itérations et on calcule la moyenne des temps par points de celles-ci.
 
 %Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
 \subsubsection{Parcours contigus des tableaux}
-Lorsqu'une donnée est utilisée dans le code, elle est copiée en mémoire cache (une mémoire à accés rapide). Suivant le principe de localité spatiale, l'accés à une donnée va probablement être suivie d'un accés à une donnée proche (Ex: parcours de boucle), une ligne de cache est en fait copiée dans la mémoire cache au lieu d'une seule donnée. 
+Lorsqu'une donnée est utilisée dans le code, elle est copiée en mémoire cache (une mémoire à accès rapide). Suivant le principe de localité spatiale, l'accès à une donnée va probablement être suivie d'un accès à une donnée proche (Ex: parcours de boucle), une ligne de cache est en fait copiée dans la mémoire cache au lieu d'une seule donnée. 
 Lorsque qu'on parcourt un tableau dans son ordre de stockage, les données nécessaires sont donc déjà dans le cache, ce qui permet de réduire les coût de transferts de données. En revanche, si on parcourt un tableau de façon non-contigüe, et que les dimensions de ce tableau sont de tailles conséquentes, un défaut de cache va se produire à chaque itération (la donnée nécessaire n'est pas présente dans le cache et une nouvelle ligne de cache doit être copiée dans le cache), ce qui entraîne un ralentissement de l'application à cause des temps de transfert entre la RAM et le cache.
 
 
@@ -133,8 +133,8 @@ Avant d'activer la vectorisation, des mesures de temps de référence ont été 
 
 Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de traiter des vecteurs de 256 bits, soit 4 nombre double précision. Si les boucles réalisent beaucoup de calculs, on peut donc espérer diviser le temps par 4. Sur BULL, c'est le jeu d'instruction AVX qui est disponible; il permet de traiter des vecteurs de 128 bits et le gain maximal potentiel est donc de 2. Cependant, comme on peut le constater sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, la vectorisation n'a entraînée qu'un gain d'entre 18 et 25\% selon le cas, indépendamment du jeu d'instruction utilisé. Grâce à Intel Advisor, un logiciel permettant d'analyser la vectorisation réalisée sur les différentes boucles d'une application, il est possible de voir que:
 \begin{itemize}
-\item certaines fonctions dans lesquelles le programme passe beaucoup de temps ne sont pas vectorisée à cause de dépendances, nottamment dans le calculs des gradients. Dans ce cas, on est dépendant de la méthode utilisée pour ces calculs et on ne peut pas forcer la vectorisation des boucles.
-\item beaucoup de petites boucles de calcul ne sont pas vectorisées. Ceci est dû à la structure de la mémoire du programme; tous les tableaux contennant des variables conservatives sont en réalité des sous-parties d'un plus grand tableaux. Lorsque des opérations sont effectuées sur ces tableaux, le compilateur assume qu'il travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un seul nom et que le programme ne dépassera pas les limites d'un tableau. Cependant, comme on peut le voir sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, le gain est relativement faible (inférieur à 4\% par rapport aux temps avec la vectorisation seule); 
+\item certaines fonctions dans lesquelles le programme passe beaucoup de temps ne sont pas vectorisée à cause de dépendances, notamment dans le calculs des gradients. Dans ce cas, on est dépendant de la méthode utilisée pour ces calculs et on ne peut pas forcer la vectorisation des boucles.
+\item beaucoup de petites boucles de calcul ne sont pas vectorisées. Ceci est dû à la structure de la mémoire du programme; tous les tableaux contenant des variables conservatives sont en réalité des sous-parties d'un plus grand tableaux. Lorsque des opérations sont effectuées sur ces tableaux, le compilateur assume qu'il travaille sur un unique grand tableau et empêche donc la vectorisation au profit de la cohérence. Pour résoudre ce problème, il suffit d'indiquer au compilateur qu'il n'y a pas aliasing; on garantit ainsi qu'une zone mémoire ne peut être accédée que par un seul nom et que le programme ne dépassera pas les limites d'un tableau. Cependant, comme on peut le voir sur les figures \ref{fig:bench_scal_nemo} et \ref{fig:bench_scal_neptune}, le gain est relativement faible (inférieur à 4\% par rapport aux temps avec la vectorisation seule); 
 \end{itemize}
 
 
@@ -179,7 +179,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \caption{\label{fig:bench_scal_speedups}Speedup finaux}
 \end{figure}
 
-Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un noeud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
+Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un nœud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
 
 \subsubsection{Alignement de la mémoire}
 Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d'
@@ -211,13 +211,13 @@ Cette section traite des méthodes utilisée pour réaliser les communication en
 \subsection{Scalabilité}\label{sec:scal}
 
 \subsubsection{Scalabilité forte}\label{sec:scal-strong}
-Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoût induit par un programme paralléle.
+Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoût induit par un programme parallèle.
 
 $$E=\frac{t_1}{n\times t_n}$$ avec $t_i$ le temps d'exécution avec $i$ processus et $t_1$ le temps d'exécution avec un seul processus.
 
 
 \subsubsection{Scalabilité faible}\label{sec:scal-weak}
-Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Etant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
+Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Étant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
 
 
 $$E=\frac{t_1}{t_i}$$ avec $t_i$ le temps d'exécution avec $i$ processus.
