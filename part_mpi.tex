@@ -69,8 +69,9 @@ $\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 po
 
 \paragraph{}La mise en œuvre efficace de l'approche numérique présentée ci-dessus sur les plates-formes parallèles a fait l'objet d'études \cite{Stoessel:1994:DNS:199617.199626,Hirsch:1988:NCI:63653} et la résolution par décomposition de domaine semble être la plus efficace. Le but est de résoudre localement le problème global. Nous nous intéressons ici aux 2 approches présentées dans l'étude \cite{Baum98dnsof}:
 
-\begin{itemize}
-\item \textbf{Méthode Schwarz}: elle consiste à résoudre chaque sous-système avec les conditions limite de Diriclhet, conditions imposées aux limites d'une équation aux dérivées partielles permettant de spécifier les valeurs que la solution doit prendre sur les bordures d'un domaine. Pour ça, la condition (\ref{eq:pade}) est modifiée sur les frontières par:
+%\begin{itemize}
+%\item \textbf{Méthode Schwarz}:
+\paragraph{Méthode Schwarz}: elle consiste à résoudre chaque sous-système avec les conditions limite de Diriclhet, conditions imposées aux limites d'une équation aux dérivées partielles permettant de spécifier les valeurs que la solution doit prendre sur les bordures d'un domaine. Pour ça, la condition (\ref{eq:pade}) est modifiée sur les frontières par:
 
 \begin{equation}\label{eq:dirichlet}
 3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i}  = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) - 3 \delta u_{i+1}
@@ -78,8 +79,27 @@ $\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 po
 
 Le terme $3 \delta u_{i+1}$ est une approximation de la dérivée sur la frontière calculée par le domaine adjacent. Cette méthode nécessite donc un couplage fort entre les sous-domaines adjacents
 
-\item \textbf{Problème local modifié}: cette seconde méthode permet de réduire l'importance du couplage de la méthode précédente. Aux frontières des sous-domaines, le schéma utilisé pour les bordures physiques non-réfléchissantes est appliqué \cite{Stoessel:1994:DNS:199617.199626}. C'est un schéma décentré qui réduit donc la précision de la solution mais qui permet de calculer un pas complet de l'intégration de Runge-Kutta (sec. \ref{sec:comms}), sans aucun couplage entre les sous-domaines. Du fait de sa précision moindre, il est cependant nécessaire d'utiliser des régions de recouvrement plus grandes qu'avec la méthode précédente.
-\end{itemize}
+%\item \textbf{Problème local modifié}
+\paragraph{Problème local modifié}: cette seconde méthode permet de réduire l'importance du couplage de la méthode précédente. Aux frontières des sous-domaines, le schéma utilisé pour les bordures physiques non-réfléchissantes est appliqué \cite{Stoessel:1994:DNS:199617.199626}:
+
+  \begin{subequations}
+    \begin{align}
+      2 \left( \frac{\partial u}{\partial x}\right) _{1} + 4 \left( \frac{\partial u}{\partial x}\right) _{2} &= \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)\label{eq:schem1}
+      \\
+~
+      4\left( \frac{\partial u}{\partial x}\right) _{n_x-1} + 2\left( \frac{\partial u}{\partial x}\right) _{n_x}  &= \frac{1}{h} \left( u_{n_x-2} + 4 u_{n_x-1} - 5 u_{n_x} \right)\label{eq:schemnx}
+    \\
+~
+    \left( \frac{\partial u}{\partial x}\right) _{i-1} + 4 \left( \frac{\partial u}{\partial x}\right) _{i}  +  \left( \frac{\partial u}{\partial x}\right) _{i-1} &= \frac{1}{h}\left( \frac{1}{3} \left( u_{i+1} - u_{i-1} \right) \right)\label{eq:schem-2nx-1}
+    \end{align}
+  \end{subequations}
+
+%$$\left( \frac{\partial u}{\partial x}\right) _{1} + 4 \left( \frac{\partial u}{\partial x}\right) _{2}  +  \left( \frac{\partial u}{\partial x}\right) _{3} = \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right)$$
+%$$\left( \frac{\partial u}{\partial x}\right) _{n_x-2} + 4 \left( \frac{\partial u}{\partial x}\right) _{n_x-1}  +  \left( \frac{\partial u}{\partial x}\right) _{n_x} = \frac{1}{h}\left( \frac{1}{3} \left( u_{n_x} - u_{n_x-2} \right) \right)$$
+
+
+Les schémas (\ref{eq:schem1}) et (\ref{eq:schemnx}) sont appliqués pour les points $1$ et $n_x$; le schéma (\ref{eq:schem-2nx-1}) pour les points $i=2 \text{ et } i=n_x-1$. Ce sont des schémas décentrés qui réduisent donc la précision de la solution mais qui permettent de calculer un pas complet de l'intégration de Runge-Kutta (sec. \ref{sec:comms}), sans aucun couplage entre les sous-domaines. Du fait de leurs précisions moindre, il est cependant nécessaire d'utiliser des régions de recouvrement plus grandes qu'avec la méthode précédente.
+%\end{itemize}
 
 
 
@@ -109,23 +129,20 @@ Dans NTMIX, il existe 3 type de conditions limites (périodique, symétrique et 
 Il existe 2 types de recouvrement possible dans NTMIX qui dépendent du type de conditions utilisées pour les bordures physiques:
 \begin{itemize}
 \item le cas périodique: ce cas, utilisé pour éliminer les problèmes décrits en section \ref{sec:nsbc}, ne possède, par définition, pas de bordures physique et par conséquent, le recouvrement doit se produire entre tous les sous-domaines et dans toutes les directions. Chaque processus possédera 2 régions de recouvrement sur toutes les directions.
-\item les cas symétriques: dans ces cas, les propriétés physique des bordures sont traitées, et les processus se trouvant en bord de domaine global ne possèdent pas de région de recouvrement.
+\item les cas symétriques: dans ces cas, les propriétés physiques des bordures sont traitées, et les processus se trouvant en bord de domaine global sur une direction ne possèdent qu'une seule région de recouvrement selon cette direction.
 \end{itemize}
 
 
 \subsubsection{Traitement des bordures internes}
-Sur la figure \ref{fig:partdom}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physique mais des bordures artificielles et ne doivent pas avoir d'influence sur la simulation. Il ne faut pas appliquer de traitement spécifique aux bordures externes.
+Sur la figure \ref{fig:depdomover}, on peut voir que lors du partitionnement du domaine, des bordures internes apparaissent. Ces bordures ne sont donc pas des bordures physiques mais des bordures artificielles et ne doivent, par conséquent, pas recevoir les traitements spécifiques aux bordures physiques.
 
 
 Pendant chaque appel à la fonction RHS, les corrections présentées dans la section \ref{sec:nsbc} sont appliquées sur les bordures afin de réduire les instabilités numériques. Ces corrections sont réalisées par un noyau de calcul qui traite les 2 plans bordure sur chaque direction. Or, il est maintenant possible qu'un sous-domaine possède un seul ou aucun de ces plans. J'ai donc modifié ce noyau afin qu'il ne traite plus qu'un seul plan à la fois, et il n'est appelé que lorsque qu'un processus possède une bordure réelle du domaine. On peut déterminer ceci par rapport à la position des sous-domaines qui est attribuée aux processus lors du découpage du domaine.
 
-Des corrections sont également appliquées par rapport à la nature physique des bordure. En effet, différents comportement de frontière sont implémentées dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS, dans la fonction \textit{impose\_boundary\_conditions} (algo \ref{algo:time_step}). Ce type de correction s'effectuait déjà sur un unique plan mais maintenant, seul les sous-domaines avec des bordures physique les appliqueront.
+Des corrections sont également appliquées par rapport à la nature physique des bordures. En effet, différents comportements de frontière sont implémentés dans NTMIX. Ces corrections sont réalisées après chaque appel à RHS, dans la fonction \textit{impose\_boundary\_conditions} (algo \ref{algo:time_step}). Contrairement aux cas des \textit{NSCBC}, ces corrections s'effectuaient déjà sur un unique plan, mais maintenant, seul les sous-domaines avec des bordures physiques les appliqueront.
 
 
 \subsection{Communications}\label{sec:comms}
-
-TODO: pour l(histoire des coins, si MPI neighbor all2all, on a pas de garanti sur l'ordre des communication donc il faut ajouter des communications pour les coins
-avec la version fait-maison, on fait pareil wallah pour pas avoir a tout recoder, bismillah
 
 \subsubsection{Calcul du pas de temps}
 Dans la version séquentielle de NTMIX, un pas de temps maximum, permettant de garantir la stabilité de la simulation, est calculé sur l'ensemble du domaine.
@@ -157,35 +174,54 @@ Comme vu dans la section précédente, la méthode de décomposition de domaine 
 
 \paragraph{}Dans cette fonction, chaque processus doit envoyer ses bordures à tous ses voisins dans la topologie virtuelle (fig. \ref{fig:comm}). MPI fournit une fonction permettant de réaliser ce type de communication; MPI\_Neighbor\_alltoallv \cite{mpi-3.0}. Pour l'utiliser, il faut préparer un buffer qui contiendra les données à envoyer à chacun de ses voisins(fig. \ref{fig:neighbor_pos}). La fonction gère automatiquement la répartition des buffers à envoyer aux voisins selon leur disposition sur la topologie. Après l'appel à cette fonction, le buffer de réception contient les données de tous les voisins autour d'un processus. Il ne reste plus qu'à stocker les variables reçues à leur place. 
 
-%\begin{figure}[!ht]
-%  \centering
-%  \begin{subfigure}[b]{0.5\textwidth}
-%    \centering
-%     \fbox{\includegraphics[scale=0.12]{figures/comms_dim1.png}}
-%  \caption{\label{fig:comm_dim1}Echanges des zones de recouvrement sur la direction $x$}
-%  \end{subfigure}%
-%  ~
-%  \begin{subfigure}[b]{0.5\textwidth}
-%    \centering
-%     \fbox{\includegraphics[scale=0.12]{figures/comms_dim2.png}}
-%  \caption{\label{fig:comm_dim2}Echanges des zones de recouvrement sur la direction $y$}
-%  \end{subfigure}
-%  \caption{\label{fig:comm}Echanges des zones de recouvrement}
-%\end{figure}
-
-\begin{figure}[ht]
+\begin{figure}[!ht]
   \centering
-  \includegraphics[scale=0.12]{figures/domain-overlap-comms.png}
-  \caption{\label{fig:comm} }
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[scale=0.12]{figures/comm1.png}
+    \caption{\label{fig:comm_dim1}Echanges des zones de recouvrement sur la direction $x$}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[scale=0.12]{figures/comm2.png}
+    \caption{\label{fig:comm_dim2}Echanges des zones de recouvrement sur la direction $y$}
+  \end{subfigure}
+  \caption{\label{fig:comm}Echanges des zones de recouvrement}
 \end{figure}
 
+%\begin{figure}[ht]
+%  \centering
+%  \includegraphics[scale=0.12]{figures/domain-overlap-comms.png}
+%  \caption{\label{fig:comm} }
+%\end{figure}
 
 
 \begin{figure}[!ht]
   \centering
-  \includegraphics[scale=0.3]{figures/neighbor_pos.png}
+  \includegraphics[scale=0.2]{figures/neighbor_pos.png}
   \caption{\label{fig:neighbor_pos}Positions des valeurs des voisins}
 \end{figure}
+
+
+\paragraph{}Cependant, comme on peut le voir sur la figure \ref{fig:comm_dim2}, cette fonction ne permet pas d'échanger les coins restés en gris. Pour palier ce problème, il est possible d'ajouter des communications en diagonal (fig. \ref{fig:comm_diag}) qui permettront le transfert de ces coins. Il est également possible de réaliser les communications illustrées par la figure \ref{fig:comm4}. L'avantage de cette seconde option est qu'elle simplifie grandement le code par rapport aux communications en diagonales en réduisant également le nombre de communications; en effet, en 3D, avec la première méthode, un processus devrait réaliser 8 communications pour récupérer ses coins mais avec la seconde, seuleument 2 communications suffisent.
+
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+  \includegraphics[scale=0.12]{figures/comm3.png}
+  \caption{\label{fig:comm_diag} }
+\end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[scale=0.12]{figures/comm4.png}
+    \caption{\label{fig:comm4}}
+  \end{subfigure}
+  \caption{\label{fig:comm}Echanges des coins}
+\end{figure}
+
 
 \paragraph{}Cependant cette fonction est relativement récente \cite{mpi-3.0} [21 septembre 2012] et peut ne pas être disponible dans les implémentation de MPI présentes sur certains calculateurs qui seront utilisés. Il m'a donc été demandé d'implémenter une seconde méthode dans un soucis de portabilité. C'est une implémentation triviale de la fonction MPI\_Neighbor\_alltoallv (algo. \ref{algo:update}); on parcourt les dimensions du domaine, et pour chaque dimension, on effectue 2 envois et 2 réceptions dans la direction correspondant à cette dimension.
 
@@ -209,13 +245,15 @@ Comme vu dans la section précédente, la méthode de décomposition de domaine 
 
 
 
+
 \subsection{Équilibrage de charge}
-Lors d'un tel découpage de domaine, il est nécessaire de s'assurer que la quantité de travail réalisée par chaque processus est semblable à celle des autres. Le but est donc de distribuer le même nombre de mailles sur chaque processus. Dans le cas d'un domaine périodique ce problème n'apparaît pas car chaque processus possède des régions de recouvrement dans toutes les directions. Cependant, si le domaine possède des frontières physique, certains sous-domaines n'auront pas le même besoin d'overlapping.
+Lors d'un tel découpage de domaine, il est nécessaire de s'assurer que la quantité de travail réalisée par chaque processus est semblable à celle des autres. Le but est donc de distribuer le même nombre de mailles sur chaque processus. Dans le cas d'un domaine périodique ce problème n'apparaît pas car chaque processus possède des régions de recouvrement dans toutes les directions. Cependant, si le domaine possède des frontières physique, certains sous-domaines n'auront pas la même quantité de points de recouvrement.
 
-\paragraph{}Prenons l'exemple d'un domaine de $100\times100\times100$ réparti sur une grille de $4\times4\times4$ processus avec un overlapping de 4: si on découpe le domaine de manière triviale, on obtient donc 64 sous-domaines de taille $25\times25\times25$. Si on ajoute ensuite les points d'overlapping, on retrouve 4 classes de sous-domaines ayant des tailles différentes (fig. \ref{fig:domain_desequilibre}); les coins du domaine auront donc $29\times29\times29$ points (classe C), les autres sous-domaines situés sur les bordures physique auront $33\times29\times29$ points (classe B), les sous-domaines situés sur les faces externes $33\times33\times29$ (classe O) et tous les autres $33\times33\times33$ (classe I). Comme on peut le constater dans le tableau \ref{arr:overlap_res}, la charge de calcul est désiquilibrée entre les processus et certain processus (ceux ayant le moins de travail) devront atteindre les autres pour les synchronisations présentées en début de partie. Même si ce comportement est moins marqué lorsque les sous-domaines sont plus grands (tab. \ref{arr:overlap_res_big}), il est préférable de l'éviter.
+\paragraph{}Prenons l'exemple d'un domaine de $100\times100\times100$ réparti sur une grille de $4\times4\times4$ processus avec un recouvrement de 4: si on découpe le domaine de manière triviale, on obtient donc 64 sous-domaines de taille $25\times25\times25$. Si on ajoute ensuite les points de recouvrement, on retrouve 4 classes de sous-domaines ayant des tailles différentes (fig. \ref{fig:domain_desequilibre}); les coins du domaine auront donc $29\times29\times29$ points (classe C), les autres sous-domaines situés sur les bordures physique auront $33\times29\times29$ points (classe B), les sous-domaines situés sur les faces externes $33\times33\times29$ (classe O) et tous les autres $33\times33\times33$ (classe I: elle n'est pas représentée sur le schéma, mais ce sont les sous-domaines ne possédant aucune bordure physique). Comme on peut le constater dans le tableau \ref{arr:overlap_res}, la charge de calcul est désiquilibrée entre les processus et certain processus (ceux ayant le moins de travail) devront atteindre les autres pour les synchronisations présentées en début de partie. Même si ce comportement est moins marqué lorsque les sous-domaines sont plus grands (tab. \ref{arr:overlap_res_big}), il est préférable de l'éviter.
   
-Si on ajoute la taille totale de l'overlapping avant de découper le domaine, les tailles des domaines internes varient selon les processus mais la taille globale (domaine interne + overlapping) est identique. Toujours avec l'exemple précédent, si on ajoute la taille de l'overlapping à la taille globale, on obtient un domaine global de $124\times124\times124$ points (sur une dimension, les 2 processus se situant aux extrémités possédent 1 seule région d'overlapping tandis que les 2 autres ont eux 2 régions $(2+2+1+1)\times4=24$) . On divise ensuite ce domaine entre les processus et on obtient cette fois-ci une seule classe de sous-domaines de $31\times31\times31$ points. On joue ici sur la taille du domaine interne pour équilibrer la charge. Un sous-domaine se trouvant sur un coin aura un domaine interne de $27\times27\times27$ alors qu'un sous-domaine de classe A aura $23\times23\times23$ point sur son domaine interne.
+Si on ajoute la taille totale du recouvrement avant de découper le domaine, les tailles des domaines internes varient selon les processus mais la taille globale (domaine interne + recouvrement) est identique. Toujours avec l'exemple précédent, si on ajoute la taille de recouvrement à la taille globale, on obtient un domaine global de $124\times124\times124$ points (sur une dimension, les 2 processus se situant aux extrémités possédent 1 seule zone de recouvrement tandis que les 2 autres ont eux 2 régions $(2+2+1+1)\times4=24$) . On divise ensuite ce domaine entre les processus et on obtient cette fois-ci une seule classe de sous-domaines de $31\times31\times31$ points. On joue ici sur la taille du domaine interne pour équilibrer la charge. Un sous-domaine se trouvant sur un coin aura un domaine interne de $27\times27\times27$ alors qu'un sous-domaine de classe A aura $23\times23\times23$ point sur son domaine interne.
 
+Cependant, ces découpages ne prennent pas en compte les communnications réalisées entre les différents sous-domaines. Comme il est difficile de prévoir l'importance du coût des communications face au coût des calculs, ces 2 méthodes seront étudiées dans la partie suivante, afin d'essayer de détérminer laquelle convients le mieux lors d'une utilisation réelle de l'application.
 
 \begin{figure}[!ht]
   \centering
@@ -253,33 +291,7 @@ Si on ajoute la taille totale de l'overlapping avant de découper le domaine, le
 \end{table}
 
 
-\paragraph{}Un déséquilibre de charge peut également apparaître lors de la phase d'initialisation, même si son impact peut être faible face à l'ensemble de la simulation, il est préférable de l'éviter. En effet, il faut éviter qu'un seul processus doive initialiser l'ensemble du domaine puis envoyer les informations calculées à tous les autres processus. Dans le cas de ce programme l'initialisation peut-être réalisée de manière indépendante (sans aucune synchronisation). En effet, les initialisations simples (valeur d'une variable fournie dans le fichier de configuration) ne nécessitent aucun calcul. Les initialisations nécessitant des calculs sont en général basées sur la position physique des points du domaine et peuvent donc être réalisées en totale indépendance.
-
-
-
-%\paragraph{}Seul les processus se trouvant sur les bordure physique du domaine réaliseront donc ces calculs et auront donc une influence sur l'équilibre de charge présenté plus tôt. 
-
-%\begin{equation}
-	\begin{align*}
-		2 \left( \frac{\partial u}{\partial x}\right) _{1} + 4 \left( \frac{\partial u}{\partial x}\right) _{2} &= \frac{1}{h}\left( u_3 + 4u_2 - 5u_1 \right)
-&
-\left( \frac{\partial u}{\partial x}\right) _{1} + 4 \left( \frac{\partial u}{\partial x}\right) _{2}  +  \left( \frac{\partial u}{\partial x}\right) _{3} &= \frac{1}{h}\left( \frac{1}{3} \left( u_3 - u_1 \right) \right) \\
-~
-4\left( \frac{\partial u}{\partial x}\right) _{n_x-1} + 2\left( \frac{\partial u}{\partial x}\right) _{n_x}  &= \frac{1}{h} \left( u_{n_x-2} + 4 u_{n_x-1} - 5 u_{n_x} \right)
-&
-\left( \frac{\partial u}{\partial x}\right) _{n_x-2} + 4 \left( \frac{\partial u}{\partial x}\right) _{n_x-1}  +  \left( \frac{\partial u}{\partial x}\right) _{n_x} &= \frac{1}{h}\left( \frac{1}{3} \left( u_{n_x} - u_{n_x-2} \right) \right) 
-	\end{align*}
-%\end{equation}
-%
-%
-%\left( \frac{\partial u}{\partial x}\right) _{i-1} + 4 \left( \frac{\partial u}{\partial x}\right) _{i}  +  \left( \frac{\partial u}{\partial x}\right) _{i-1} &= \frac{1}{h}\left( \frac{1}{3} \left( u_{i+1} - u_{i-1} \right) \right)
- $$$$
-%
- $$ $$
-%
-$$ $$
-%
-$$ $$
+\paragraph{}Un déséquilibre de charge peut également apparaître lors de la phase d'initialisation, même si son impact peut être faible face à l'ensemble de la simulation, il est préférable de l'éviter. En effet, il faut éviter qu'un seul processus doive initialiser l'ensemble du domaine puis envoyer les informations calculées à tous les autres processus. Dans le cas de ce programme l'initialisation peut-être réalisée de manière indépendante (sans aucune synchronisation). En effet, les initialisations simples (valeur d'une variable fournie dans le fichier de configuration) ne nécessitent aucun calcul. Les initialisations nécessitant des calculs sont en général fonction de la position d'un point dans le domaine et peuvent donc être réalisées en totale indépendance.
 
 
 \subsection{Validation}

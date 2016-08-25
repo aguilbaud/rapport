@@ -86,39 +86,11 @@ $$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}
 
 
 \subsubsection{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Ce procédé entraîne l'appartion d'oscillations non-physiques qui faussent les résultats de la simulation. Pour palier ce problème, il est courant de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique. Mais dans le cas de l'étude des écoulements réactifs, il est nécessaire de traiter les frontières. Pour résoudre ce problème, la méthode NSCBC (\textit{Navier-Strokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}
+Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Ce procédé entraîne l'appartion d'oscillations non-physiques qui faussent les résultats de la simulation. Pour palier ce problème, il est courant de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique. Mais dans le cas de l'étude des écoulements réactifs, il est nécessaire de traiter les frontières. Pour résoudre ce problème, la méthode NSCBC (\textit{Navier-Strokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
 
 
-Les équation \textit{NSCBC} sur la direction $x$ sont:
 
-\begin{subequations}
-\begin{align}
-  \begin{split}
-    \mathcal{L}_1&=(u-c)\left[ \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \right) \frac{\partial T}{\partial x}  -  \left( \frac{1}{2} \frac{c}{\overline{C}_p}  \right) \frac{\partial u}{\partial x} \right.\\
-      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}   \right]
-  \end{split}\label{eq:l1}\\
-~
-  \mathcal{L}_2&= u \frac{\partial v}{\partial x}\label{eq:l2}\\
-~
-  \mathcal{L}_3&= u \frac{\partial w}{\partial x}\label{eq:l3}\\
-~
-  \begin{split}
-    \mathcal{L}_4&=u \left[ \left( \frac{1- \gamma}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{\gamma} \right) \frac{\partial T}{\partial x} - \left( \frac{\overline{W}T}{W_1} \right) \frac{\partial Y_1}{\partial x} \right. \\
-      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}  \right]
-    \end{split}\\
-~
-  \mathcal{L}_{j+3}&=u  \left[ - \left( \frac{\overline{W}T}{W_j} \right) \frac{\partial Y_j}{\partial x} \right]\\
-~
-  \mathcal{L}_{N_s+4}&=u \left[ \left( \frac{\gamma -1}{\gamma} \right) \frac{\partial \rho}{\partial x} - \left( \frac{\rho}{\gamma T} \right) \frac{\partial T}{\partial x} - \sum_{i=1}^{N_s} \left(  \frac{\overline{W}}{W_i} \frac{\rho}{\gamma} \right) \frac{\partial Y_i}{\partial x}  \right]\\
-~
-  \begin{split}
-    \mathcal{L}_{N_s+5}&=(u+c)\left[ \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \right) \frac{\partial T}{\partial x}  +  \left( \frac{1}{2} \frac{c}{\overline{C}_p}  \right) \frac{\partial u}{\partial x} \right.\\
-      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}   \right]
-  \end{split}\label{eq:llast}
-\end{align}
-\end{subequations}
-
-\paragraph{}Les équations (\ref{eq:l1}) à (\ref{eq:llast}) sont vraies pour toutes les directions; toutes les dérivées partielles se font selon la direction $x$. Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et j'ai donc dû l'ajouter. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$.
+Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et a donc dû être ajouter. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$.
 
 \subsubsection{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement celles permettant de lancer les tests présentés dans la section suivante.
 

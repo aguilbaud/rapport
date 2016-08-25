@@ -1,6 +1,58 @@
-\section{Annexe A}
-\subsection{xxx}
-\section{Annexe B}
+\section{NSCBC}\label{app:nscbc}
+\begin{subequations}
+\begin{align}
+  \begin{split}
+    \mathcal{L}_1&=(u-c)\left[ \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \right) \frac{\partial T}{\partial x}  -  \left( \frac{1}{2} \frac{c}{\overline{C}_p}  \right) \frac{\partial u}{\partial x} \right.\\
+      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}   \right]
+  \end{split}\label{eq:l1}\\
+~
+  \mathcal{L}_2&= u \frac{\partial v}{\partial x}\label{eq:l2}\\
+~
+  \mathcal{L}_3&= u \frac{\partial w}{\partial x}\label{eq:l3}\\
+~
+  \begin{split}
+    \mathcal{L}_4&=u \left[ \left( \frac{1- \gamma}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{\gamma} \right) \frac{\partial T}{\partial x} - \left( \frac{\overline{W}T}{W_1} \right) \frac{\partial Y_1}{\partial x} \right. \\
+      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}  \right]
+    \end{split}\\
+~
+  \mathcal{L}_{j+3}&=u  \left[ - \left( \frac{\overline{W}T}{W_j} \right) \frac{\partial Y_j}{\partial x} \right]\\
+~
+  \mathcal{L}_{N_s+4}&=u \left[ \left( \frac{\gamma -1}{\gamma} \right) \frac{\partial \rho}{\partial x} - \left( \frac{\rho}{\gamma T} \right) \frac{\partial T}{\partial x} - \sum_{i=1}^{N_s} \left(  \frac{\overline{W}}{W_i} \frac{\rho}{\gamma} \right) \frac{\partial Y_i}{\partial x}  \right]\\
+~
+  \begin{split}
+    \mathcal{L}_{N_s+5}&=(u+c)\left[ \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{T}{\rho} \right) \frac{\partial \rho}{\partial x} + \left( \frac{1}{2} \frac{\gamma -1}{\gamma} \right) \frac{\partial T}{\partial x}  +  \left( \frac{1}{2} \frac{c}{\overline{C}_p}  \right) \frac{\partial u}{\partial x} \right.\\
+      &\left. + \sum_{i=1}^{N_s} \left(  \frac{1}{2} \frac{\gamma -1}{\gamma} \frac{\overline{W}T}{W_i} \right) \frac{\partial Y_i}{\partial x}   \right]
+  \end{split}\label{eq:llast}
+\end{align}
+\end{subequations}
+
+
+
+
+\newpage
+\section{Résultats des performances séquentielles sur le calculateur Bullx}\label{app:seq_neptune}
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=1,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_nonper}}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=2,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_sym}}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    %\includepdf[pages={2}]{gnuplot/bench_scalaire.pdf}
+    \includegraphics[page=3,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_per}}
+  \end{subfigure}
+  \caption{\label{fig:bench_scal_neptune}Temps par points des cas tests - BULL}
+\end{figure}
+
 
 \section{Modifications du traitements des bordures}
 LEs subroutines bc\_x, bc\_y et bc\_z stockaient les plans des bordures selon leur directions respectives. Dans le cas parallèle, un processus ne possédent pas forcément les 2 plans frontières. Ces routines ont donc été modifiées avent de traiter un seul plan et ce grace un argument qui y a été rajouté.
