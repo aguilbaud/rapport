@@ -21,9 +21,9 @@ Après cette période et avant de commencer à développer une version en 3 dime
 
 L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et de m'éviter une tâche fastidieuse.
 
-\subsubsection{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour palier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
+\subsubsection{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour pallier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
 
-\subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permettent de structurer de grandes quantités de données. La figure \ref{fig:hdf5_struct} montre un exemple d'entête de fichier HDF5 généré par l'application; les ensemble X,Y et Z contiennent les coordonnées des points du domaine de calcul dans des tableaux monodimensionnels dont le type est précisé (ici des nombres à virgule flotante de 64 bits) et les autres datasets contiennent les valeurs des différentes variables de la simulation (ici dans dans des matrices).
+\subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permettent de structurer de grandes quantités de données. La figure \ref{fig:hdf5_struct} montre un exemple d'entête de fichier HDF5 généré par l'application; les ensembles X,Y et Z contiennent les coordonnées des points du domaine de calcul dans des tableaux monodimensionnels dont le type est précisé (ici des nombres à virgule flotante de 64 bits) et les autres datasets contiennent les valeurs des différentes variables de la simulation (ici dans dans des matrices).
 
 \begin{figure}[!ht]
   \centering
@@ -54,7 +54,7 @@ Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visu
 Pour vérifier que les modifications réalisées ne changeaient pas le comportement du programme, j'ai écrit un script permettant de comparer les résultats fournis par ma version avec ceux du programme initial. Ce script génère des fichiers d'initialisation de NTMIX avec différentes configurations du domaine (permettant ainsi de s'assurer que toutes les régions du code soient exécutées). Le script lance ensuite le programme initial et la version modifiée avec ces fichiers puis compare les résultats obtenus par chacune des versions.
 
 
-\paragraph{}Avec l'apparition de l'allocation dynamique, beaucoup de problèmes peuvent apparaître; mémoire non désallouées entrainant des fuites de mémoires (pouvant entrainer une saturation de la mémoire de la machine ainsi qu'un plantage du code), erreur sur les tailles des tableaux entraînant des erreurs de segmentation (tentative d'accès à des zones mémoire n'appartenant pas au programme).
+\paragraph{}Avec l'apparition de l'allocation dynamique, beaucoup de problèmes peuvent apparaître; mémoire non désallouée entrainant des fuites de mémoires (pouvant entrainer une saturation de la mémoire de la machine ainsi qu'un plantage du code), erreur sur les tailles des tableaux entraînant des erreurs de segmentation (tentative d'accès à des zones mémoire n'appartenant pas au programme).
 J'ai donc utilisé Valgrind, un outil permettant notamment d'analyser la mémoire d'un programme durant son exécution autorisant ainsi à vérifier l'apparition de tels problèmes.
 
 
@@ -75,7 +75,7 @@ Plusieurs parties du code prévoyaient déjà le passage du code en 3 dimensions
 Les gradients permettent de calculer l'évolution spatiale des grandeurs physiques (densité, vitesse, énergie, etc.). Le gradient pour une fonction bidimensionnelle $f(x,y)$ était donc décrit comme suit:
 $$\nabla f(x,y) =\left(\frac{\partial f}{\partial x}(x,y),\frac{\partial f}{\partial y}(x,y)\right) $$
 
-En 3D, les fonctions devant être dérivées sont dépendantes de $(x,y,z)$, les dérivées se réalise maintenant sur un espace et non plus sur un plan:
+En 3D, les fonctions devant être dérivées sont dépendantes de $(x,y,z)$, les dérivées se réalisent maintenant sur un espace et non plus sur un plan:
 $$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}{\partial y}(x,y,z)\right)$$
 
 
@@ -86,7 +86,7 @@ $$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}
 
 
 \subsubsection{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Ce procédé entraîne l'apparition d'oscillations non-physiques qui faussent les résultats de la simulation. Pour palier ce problème, il est courant de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique. Mais dans le cas de l'étude des écoulements réactifs, il est nécessaire de traiter les frontières. Pour résoudre ce problème, la méthode NSCBC (\textit{Navier-Strokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
+Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Ce procédé entraîne l'apparition d'oscillations non-physiques qui faussent les résultats de la simulation. Pour pallier ce problème, il est courant de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique. Mais dans le cas de l'étude des écoulements réactifs, il est nécessaire de traiter les frontières. Pour résoudre ce problème, la méthode NSCBC (\textit{Navier-Stokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
 
 
 
@@ -106,7 +106,7 @@ Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la
 % \end{itemize}
 
 \subsubsection{Validation}\label{sec:3D-validation}
-Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant la 3éme dimension à 1 ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
+Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant la 3ème dimension à 1 ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
 
 \begin{itemize}
 \item Écoulements uniformes: un flux uniforme traverse le domaine selon un axe; le flux étant constant, les dérivées doivent rester nulles et les vitesses ne doivent pas varier
@@ -121,11 +121,11 @@ Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comport
 \paragraph{Écoulements uniformes}
 Comme dit précédemment, les dérivées doivent être nulles dans ce cas et la simulation doit donc rester dans son état initial. Comme on peut le voir sur la figure \ref{fig:uniform_flow}, les vitesses selon les 3 axes sont restées constantes au cours du temps.
  
-\begin{figure}[ht]
-  \centering
-  % \includegraphics[scale=0.3]{figures/uniform_flow.png}
-  \caption{\label{fig:uniform_flow}Ecoulement uniforme}
-\end{figure}
+%\begin{figure}[ht]
+%  \centering
+%  % \includegraphics[scale=0.3]{figures/uniform_flow.png}
+%  \caption{\label{fig:uniform_flow}Ecoulement uniforme}
+%\end{figure}
 
 \paragraph{Front de flamme}
 Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et la concentration d'une espèce est modélisée par une gaussienne centrée simplifiée en $e^{-(x^2)}$ et l'autre par $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration totale de 1 en tout point du domaine. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{f}$. Sur la figure \ref{fig:diff}, nous pouvons observer en bleue la valeur initiale d'une espèce, en vert sa valeur au temps $t$ de la simulation et en rouge la valeur théorique.
@@ -137,44 +137,44 @@ Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et 
 %   \caption{\label{fig:diff} }
 % \end{figure}
 
-\begin{figure}[t!]
-  \centering
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    %\includegraphics[width=.9\linewidth]{figures/diff.png}
-    \caption{\label{fig:diff_0}Valeur x $t_0$}
-  \end{subfigure}%
-  ~ 
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
-    \caption{\label{fig:diff_325}Valeur x $t$}
-  \end{subfigure}
-  \caption{Caption place holder}
-  \centering
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    %\includegraphics[width=.9\linewidth]{figures/diff_0.png}
-    \caption{\label{fig:diff_0_domain}Valeur x $t_0$ - Domaine complet}
-  \end{subfigure}%
-  ~ 
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
-    \caption{\label{fig:diff_325_domain}Valeur x $t$ - Domaine complet}
-  \end{subfigure}
-  \caption{\label{fig:diff_}Diffusion}
-\end{figure}
+%\begin{figure}[t!]
+%  \centering
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%    %\includegraphics[width=.9\linewidth]{figures/diff.png}
+%    \caption{\label{fig:diff_0}Valeur x $t_0$}
+%  \end{subfigure}%
+%  ~ 
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
+%    \caption{\label{fig:diff_325}Valeur x $t$}
+%  \end{subfigure}
+%  \caption{Caption place holder}
+%  \centering
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%    %\includegraphics[width=.9\linewidth]{figures/diff_0.png}
+%    \caption{\label{fig:diff_0_domain}Valeur x $t_0$ - Domaine complet}
+%  \end{subfigure}%
+%  ~ 
+%  \begin{subfigure}[b]{0.5\textwidth}
+%    \centering
+%    %\includegraphics[width=.9\linewidth]{figures/diff_325.png}
+%    \caption{\label{fig:diff_325_domain}Valeur x $t$ - Domaine complet}
+%  \end{subfigure}
+%  \caption{\label{fig:diff_}Diffusion}
+%\end{figure}
 
 
 
 \paragraph{Turbulence homogène isotrope}Ce cas de test est moins trivial que les autres. Il simule cette fois-ci un flux turbulent (un flux dans lequel la vitesse varie en tous points, de manière imprévisible). Homogène et isotrope se rapporte à certaines caractéristiques d'un tel flux. 
 
-\begin{figure}[ht]
-  \centering
-  %\includegraphics[scale=0.3]{figures/turbiso.png}
-  \caption{\label{fig:turbiso}Turbulence homogène isotrope}
-\end{figure}
+%\begin{figure}[ht]
+%  \centering
+%  %\includegraphics[scale=0.3]{figures/turbiso.png}
+%  \caption{\label{fig:turbiso}Turbulence homogène isotrope}
+%\end{figure}
 
 
 

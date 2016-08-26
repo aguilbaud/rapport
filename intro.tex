@@ -1,7 +1,7 @@
 \section{Introduction}
 \subsection{Le Cerfacs}\label{sec:intro}
 
-Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille pour ses actionnaires (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifique et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée. Il travaille également en partenariat avec le CNRS, l'Irit, le CEA ainsi que l'Inria.
+Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille pour ses actionnaires (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifiques et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée. Il travaille également en partenariat avec le CNRS, l'Irit, le CEA ainsi que l'Inria.
 
 
 Le personnel du Cerfacs est réparti en équipes:
@@ -14,7 +14,7 @@ Le personnel du Cerfacs est réparti en équipes:
 \end{itemize}
 
 \subsubsection{L'équipe CFD}
-L'équipe CFD (\textit{Computational Fluid Dynamics: mécanique des fluides numérique}) est la plus grosse équipe du Cerfacs et c'est en son sein que j'ai réalisé mon stage. Elle se concentre sur le développement de méthodes numériques permettant la simulation des écoulements et les applique aux avions, fusées, moteurs, turbines, etc. Ces méthodes permettent ensuite d'étudier les mouvements de fluides et leurs effets par la résolution d'équations régissant de tels fluides. L'avantage des simulations mises en place est grand pour l'industrie; elles permettent d'étudier des phénomènes complexes pour un coût très inférieur à des expérience "réelles".
+L'équipe CFD (\textit{Computational Fluid Dynamics: mécanique des fluides numérique}) est la plus grosse équipe du Cerfacs et c'est en son sein que j'ai réalisé mon stage. Elle se concentre sur le développement de méthodes numériques permettant la simulation des écoulements et les applique aux avions, fusées, moteurs, turbines, etc. Ces méthodes permettent ensuite d'étudier les mouvements de fluides et leurs effets par la résolution d'équations régissant de tels fluides. L'avantage des simulations mises en place est grand pour l'industrie; elles permettent d'étudier des phénomènes complexes pour un coût très inférieur à des expériences "réelles".
 
 Bénédicte CUENOT, une des chef de projet de l'équipe, m'encadrait pour la partie physique de mon stage.
 
@@ -42,11 +42,11 @@ Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN ut
 Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de tourner sur de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
 
 
-\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrais moderniser le code avant de développer une version 3D de celui-ci. Cette première partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents.\ref{sec:part1}
+\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrais moderniser le code avant de développer une version 3D de celui-ci. Cette partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents et sera présentée en section \ref{sec:part1}
 
-Dans une seconde partie, je m'intéresserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.\ref{sec:part2}
+Dans la section \ref{sec:part2}, je m'intéresserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.
 
-Enfin, je mesurerai les performances de NTMIX sur les calculateurs internes du Cerfacs afin d'essayer de tirer les meilleurs performances possibles.\ref{sec:part3}
+Enfin, dans une dernière partie (section \ref{sec:part3}), je mesurerai les performances de NTMIX sur les calculateurs internes du Cerfacs afin d'essayer de tirer les meilleurs performances possibles.
 
 \paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs présents au Cerfacs.
 
@@ -60,7 +60,7 @@ La \textbf{mécanique des fluides} est l'étude du comportement des fluides (liq
 \end{itemize}
 
 
-Dans le cas de NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées partielles sont résolues.
+Dans le cas de NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées partielles qui sont résolues.
 
 Cependant, la mécanique des fluides numérique se base sur des versions discrétisées de ces équations. Pour NTMIX, le domaine de calcul (espace) est divisé en volumes élémentaires (discrétisation spatiale) selon une approche structurée (maillage structuré) qui consiste à découper l'espace en cellules régulièrement espacées selon toutes les directions du domaine.
 
@@ -90,7 +90,7 @@ Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes 
   \end{subfigure}
 \end{figure}
 
-L'approche DNS est donc la plus coûteuse en terme de puissance de calcul nécessaire étant donné qu'aucun modèle de turbulence n'est utilisé contrairement à la méthode LES qui ne simule que les tourbillons les plus grand. Les domaines d'applications de ces différentes méthodes sont donc différents; l'approche DNS est plutôt réservée à la recherche du fait des coûts élevés de telles simulations tandis que les méthodes LES et RANS sont plus adaptées à un contexte industriel.
+L'approche DNS est donc la plus coûteuse en terme de puissance de calcul nécessaire étant donné qu'aucun modèle de turbulence n'est utilisé contrairement à la méthode LES qui ne simule que les tourbillons les plus grands, les petits tourbillons étant seulement modélisés. Les domaines d'applications de ces différentes méthodes sont donc différents; l'approche DNS est plutôt réservée à la recherche du fait des coûts élevés de telles simulations tandis que les méthodes LES et RANS sont plus adaptées à un contexte industriel.
 
 
 \subsubsection{Vocabulaire lié à la CFD}
@@ -98,6 +98,6 @@ L'approche DNS est donc la plus coûteuse en terme de puissance de calcul néces
 \begin{itemize}
 \item Variables conservatives: ce sont les variables utilisées dans la simulation et qui sont soumises aux lois de conservation; conservation de l'énergie (masse) et conservation de la quantité de mouvement. Les variables conservatives se rapporteront donc ici à la densité, l'énergie et les vitesses selon toutes les directions.
 \item Champ: c'est l'association d'une valeur d'un paramètre à un point de l'espace ou du maillage. Il existe des \textbf{champs scalaires} qui associent une valeur (densité, pression, etc.) à chaque point et des \textbf{champs vectoriels} qui associent un vecteur (vitesse) à chaque point de l'espace.
-\item Gradient: c'est une opération réalisé sur un champ. C'est l'équivalent de la dérivée pour une fonction.
+\item Gradient: c'est une opération réalisée sur un champ. C'est une généralisation de la dérivée pour une fonction à plusieurs variables.
 
 \end{itemize}
