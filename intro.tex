@@ -14,7 +14,7 @@ Le personnel du Cerfacs est réparti en équipes:
 \end{itemize}
 
 \subsubsection{L'équipe CFD}
-L'équipe CFD (\textit{Computational Fluid Dynamics: mécanique des fluides numérique}) est la plus grosse équipe du Cerfacs et c'est en son sein que j'ai réalisé mon stage. Elle se concentre sur le développement de méthodes numériques permettant la simulation des écoulements et les applique aux avions, fusées, moteurs, turbines, etc. Ces méthodes permettent ensuite d'étudier les mouvements de fluides et leurs effets par la résolution d'équations régissant de tels fluides. L'avantage des simulations mises en place est grand pour l'industrie; elles permettent d'étudier des phénomènes complexes pour un coût très inférieur à des expériences "réelles".
+L'équipe CFD (\textit{Computational Fluid Dynamics: mécanique des fluides numérique}) est la plus grosse équipe du Cerfacs et c'est en son sein que j'ai réalisé mon stage. Elle se concentre sur le développement de méthodes numériques permettant la simulation des écoulements et les applique aux avions, fusées, moteurs, turbines, etc. Ces méthodes permettent ensuite d'étudier les mouvements de fluides et leurs effets par la résolution d'équations régissant de tels fluides. L'avantage des simulations mises en place est grand pour l'industrie; elles permettent d'étudier des phénomènes complexes pour un coût très inférieur à des expériences réelles.
 
 Bénédicte CUENOT, une des chef de projet de l'équipe, m'encadrait pour la partie physique de mon stage.
 
@@ -36,19 +36,19 @@ Une simulation numérique directe (DNS: Direct Numerical Simulation) est une sim
 Comme vu précedemment, le coût d'une simulation réalisée par NTMIX\_CHEMKIN est très élevé. Son utilisation était donc restreinte au cas en bidimensionnel, mais l'évolution des machines de calcul parallèle permet aujourd'hui d'utiliser une version tridimensionnelle à des coûts raisonnable.
 
 
-Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX\_3D, un autre logciel de simulation développé au Cerfacs, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autres méthodes de simulation.
+Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN utilise une librairie permettant de prendre en compte les cinétiques complexes des éléments chimiques (CHEMKIN), contrairement à NTMIX\_3D, un autre logiciel de simulation développé au Cerfacs, déjà en 3D mais n'utilisant pas de chimie complexe. Le portage en 3D permettra donc d'observer des phénomènes complexes ne pouvant pas forcément être obtenus avec d'autres méthodes de simulation.
 
 
-Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de tourner sur de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
+Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de traiter de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
 
 
-\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrais moderniser le code avant de développer une version 3D de celui-ci. Cette partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents et sera présentée en section \ref{sec:part1}
+\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrai moderniser le code avant de développer une version 3D de celui-ci. Cette partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents et sera présentée en section \ref{sec:part1}
 
 Dans la section \ref{sec:part2}, je m'intéresserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.
 
 Enfin, dans une dernière partie (section \ref{sec:part3}), je mesurerai les performances de NTMIX sur les calculateurs internes du Cerfacs afin d'essayer de tirer les meilleurs performances possibles.
 
-\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs présents au Cerfacs.
+\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs en combustion présents au Cerfacs.
 
 \subsection{Présentation de la mécanique des fluides}
 \subsubsection{Mécanique des fluides numérique}
@@ -60,7 +60,7 @@ La \textbf{mécanique des fluides} est l'étude du comportement des fluides (liq
 \end{itemize}
 
 
-Dans le cas de NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées partielles qui sont résolues.
+Dans NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées partielles qui sont résolues.
 
 Cependant, la mécanique des fluides numérique se base sur des versions discrétisées de ces équations. Pour NTMIX, le domaine de calcul (espace) est divisé en volumes élémentaires (discrétisation spatiale) selon une approche structurée (maillage structuré) qui consiste à découper l'espace en cellules régulièrement espacées selon toutes les directions du domaine.
 
@@ -97,7 +97,7 @@ L'approche DNS est donc la plus coûteuse en terme de puissance de calcul néces
 
 \begin{itemize}
 \item Variables conservatives: ce sont les variables utilisées dans la simulation et qui sont soumises aux lois de conservation; conservation de l'énergie (masse) et conservation de la quantité de mouvement. Les variables conservatives se rapporteront donc ici à la densité, l'énergie et les vitesses selon toutes les directions.
-\item Champ: c'est l'association d'une valeur d'un paramètre à un point de l'espace ou du maillage. Il existe des \textbf{champs scalaires} qui associent une valeur (densité, pression, etc.) à chaque point et des \textbf{champs vectoriels} qui associent un vecteur (vitesse) à chaque point de l'espace.
+\item Champ: c'est l'association d'une valeur d'un paramètre à un point de l'espace ou du maillage. Il existe des \textbf{champs scalaires} qui associent une valeur (densité, pression, etc.) à chaque point et des \textbf{champs vectoriels} qui associent un vecteur (vitesses) à chaque point de l'espace.
 \item Gradient: c'est une opération réalisée sur un champ. C'est une généralisation de la dérivée pour une fonction à plusieurs variables.
 
 \end{itemize}
