@@ -27,7 +27,7 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
       \hline
       Cache L2 & 256 Ko & 256 Ko \\
       \hline
-      Cache L1 & 20 Mo (partagé) & 30 Mo (partagé) \\
+      Cache L3 & 20 Mo (partagé) & 30 Mo (partagé) \\
       \hline
       Bande passante inter-noeud & 5 Go/s & 6.4 Go/s \\
       \hline
@@ -38,10 +38,10 @@ L'ensemble des tests suivants ont été réalisés sur les calculateurs internes
 
 \subsection{Métriques utilisées}
 \begin{itemize}
-\item Le temps passé pour calculer un point, par pas de temps. Cette mesure est exprimée en microsecondes par point par itération ($\mu s/it/p$).
+\item Le temps passé pour calculer un point, par pas de temps. Cette mesure est exprimée en microsecondes par point par itération ($\mu s/p/it$).
 
 %\item Le nombre d'opérations à virgule flottante par seconde (\textit{Flops: FLoating Point OPeration per Second}). Elle mesure le nombre d'opération par seconde utilisant des nombres réels (ou nombre à virgule flottante). Elle est utile pour vérifier si le code utilise toute la puissance de calcul possible.
-\item Scalabilité: la mesure de la scalabilité d'une application permet d'indiquer l'efficacité de celle-ci lorsqu'on augmente le nombre d'éléments parallèle (ici les coeurs). Il existe de type de mesure de scalabilité présentées en section \ref{sec:scal}
+\item Scalabilité: la mesure de la scalabilité d'une application permet d'indiquer l'efficacité de celle-ci lorsqu'on augmente le nombre d'éléments parallèle (ici les coeurs). Il existe 2 type de mesure de scalabilité présentées en section \ref{sec:scal}
 
 
 
@@ -56,7 +56,7 @@ Dans cette partie, on s'intéresse au programme testé et fonctionnel présenté
 \begin{itemize}
 \item Cas périodique: le domaine de calcul est périodique, aucun traitement n'est appliqué aux frontières de celui-ci
 \item Cas symétrique: les bordures physiques sont traitées avec \textit{NSCBC} 
-\item Cas non-périodique: les bordures physiques sont traitées avec \textit{NSCBC} et un schéma décentré est utilisé 
+\item Cas non-périodique: les bordures physiques sont traitées avec \textit{NSCBC} et un schéma décentré est utilisé pour le calcul des gradients aux bordures.
 \end{itemize}
 
 
@@ -65,10 +65,10 @@ Dans chacun des tests, 2 espèces sont présentes. On part d'une taille de 20 po
 %Une fois le programme testé et fonctionnel, j'ai commencé à étudier ses performances. J'ai, dans un premier temps, mesuré un temps de référence pour l'exécution de ce programme; compilation par défaut, donc avec l'option -O2.
 \subsubsection{Parcours contigus des tableaux}
 Lorsqu'une donnée est utilisée dans le code, elle est copiée en mémoire cache (une mémoire à accès rapide). Suivant le principe de localité spatiale, l'accès à une donnée va probablement être suivie d'un accès à une donnée proche (Ex: parcours de boucle), une ligne de cache est en fait copiée dans la mémoire cache au lieu d'une seule donnée. 
-Lorsque qu'on parcourt un tableau dans son ordre de stockage, les données nécessaires sont donc déjà dans le cache, ce qui permet de réduire les coût de transferts de données. En revanche, si on parcourt un tableau de façon non-contigüe, et que les dimensions de ce tableau sont de tailles conséquentes, un défaut de cache va se produire à chaque itération (la donnée nécessaire n'est pas présente dans le cache et une nouvelle ligne de cache doit être copiée dans le cache), ce qui entraîne un ralentissement de l'application à cause des temps de transfert entre la RAM et le cache.
+Lorsque qu'on parcourt un tableau dans son ordre de stockage, les données nécessaires sont donc déjà dans le cache, ce qui permet de réduire les coûts de transfert de données. En revanche, si on parcourt un tableau de façon non-contigüe, et que les dimensions de ce tableau sont de tailles conséquentes, un défaut de cache va se produire à chaque itération (la donnée nécessaire n'est pas présente dans le cache et une nouvelle ligne de cache doit être copiée dans le cache), ce qui entraîne un ralentissement de l'application à cause des temps de transfert entre la RAM et le cache.
 
 
-\paragraph{}Dans les fonctions calculant les gradients, beaucoup de boucle réalisaient des parcours de tableaux non contigus. En Fortran, les tableaux sont stockés en ``row major'' (fig. \ref{fig:rowmajor}); par exemple, les éléments $a_{1,1}$ et $a_{2,1}$ sont à côté en mémoire.
+\paragraph{}Dans les fonctions calculant les gradients, beaucoup de boucles réalisaient des parcours de tableaux non contigus. En Fortran, les tableaux sont stockés en ``row major'' (fig. \ref{fig:rowmajor}); par exemple, les éléments $a_{1,1}$ et $a_{2,1}$ sont à côté en mémoire.
 
 \begin{figure}[ht]
   \centering
@@ -179,7 +179,7 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
   \caption{\label{fig:bench_scal_speedups}Speedup finaux}
 \end{figure}
 
-Comme on peut le voir sur les figure \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de 20, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un nœud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la parallélisation.
+Comme on peut le voir sur les figures \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de maillage de $20^3$, environ 27Mo sont utilisés et pour un domaine de 30, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un nœud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la vectorisation.
 
 \subsubsection{Alignement de la mémoire}
 Lorsqu'on vectorise un code, il est conseillé d'aligner la mémoire afin d'
@@ -215,6 +215,7 @@ Pour une taille de problème fixée, on augmente le nombre de processus. Dans le
 
 $$E=\frac{t_1}{n\times t_n}$$ avec $t_i$ le temps d'exécution avec $i$ processus et $t_1$ le temps d'exécution avec un seul processus.
 
+\paragraph{}On recherche donc une taille de problème la plus grande possible afin de pouvoir augmenter le nombre de processus. Pour cela, il faut trouver une taille de problème qui occupe le plus de mémoire possible sur un noeud. J'ai utilisée MPS pour mesurer la mémoire totale utilisée par tous les processus MPI sur un noeud. On trouve que pour un domaine de $400^3$ points de maillage, la mémoire utilisée est d'environ 55Go. La mémoire disponible sur un noeud du cluster LENOVO est de 64Go donc cette taille de domaine sera utilisée pour mesurer la scalabilité forte de l'application.
 
 \subsubsection{Scalabilité faible}\label{sec:scal-weak}
 Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Étant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
