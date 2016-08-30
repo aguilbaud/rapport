@@ -1,13 +1,13 @@
 \section{Parallélisation de NTMIX} \label{sec:part2}
 
 
-Comme vu dans l'introduction, l'objectif est de pouvoir exécuter cette application sur un maillage de taille conséquente ($\approx 10^9$ points) ce qui est impossible de faire sur un unique processeur; en effet, pour chaque point d'un maillage, au moins 5 variables conservatives doivent être stockées (densité, vitesses et l'énergie). Chacune de ces variables sont des nombres à virgule flottante en double précision (méthode utilisée pour représenter les nombres réels en informatique) occupant 8 octets. L'espace nécessaire pour stocker ces variables serait de $10^9 \times 5 \times 8 \approx 37.25$ Go, auquel il faudrait ajouter les $7.45$ Go par espèce chimique. Sachant qu'un des tests qui sera utilisé possédera 27 espèces, nous arrivons à un total de $37.25+27 \times 7.45\approx 238.42$ Go seulement pour stocker les variables nécessaires à la simulation auxquelles il faudrait encore ajouter les tableaux de travail.
+Comme vu dans l'introduction, l'objectif est de pouvoir exécuter cette application sur un maillage de taille conséquente ($\approx 10^9$ points) ce qui est impossible de faire sur un unique processeur; en effet, pour chaque point d'un maillage, au moins 5 variables conservatives doivent être stockées (masse volumique, vitesses et l'énergie). Chacune de ces variables sont des nombres à virgule flottante en double précision (méthode utilisée pour représenter les nombres réels en informatique) occupant 8 octets. L'espace nécessaire pour stocker ces variables serait de $10^9 \times 5 \times 8 \approx 37.25$ Go, auquel il faudrait ajouter les $7.45$ Go par espèce chimique. Sachant qu'un des tests qui sera utilisé possédera 27 espèces, nous arrivons à un total de $37.25+27 \times 7.45\approx 238.42$ Go seulement pour stocker les variables nécessaires à la simulation auxquelles il faudrait encore ajouter les tableaux de travail.
 
 De plus, la charge de calcul serait colossale; les mesures de la version séquentielle présentées dans la section \ref{fig:vecto} montrent que pour un maillage d'environ 41 millions de points, le temps par point est de 4 $\mu$s. Dans le cas optimiste où la courbe n'augmenterait pas, un pas de temps pour $10^9$ points durerait $10^9\times4\times10^{-6}=4000$s ($\approx$ 1 heure 7 minutes). Une simulation de 10000 pas de temps durerait donc $4000\times10^4$ secondes $\approx$ 463 jours.
 
 
 \subsection{Décomposition de domaine}
-\paragraph{}Il est donc impératif de diviser la charge de travail ainsi que la mémoire utilisée par le programme afin d'arriver à des nombres plus raisonnables. Pour cela, il est possible de partitionner le domaine de la simulation en plusieurs sous-domaines, plus petits, et de réaliser les calculs de chaque sous-domaine sur des processus différents, possédant chacun les données relatives à son sous-domaine. 
+\paragraph{}Il est donc impératif de diviser la charge de travail ainsi que la mémoire utilisée par le programme afin d'arriver à des coûts en mémoire et CPU plus raisonnables. Pour cela, il est possible de partitionner le domaine de la simulation en plusieurs sous-domaines, plus petits, et de réaliser les calculs de chaque sous-domaine sur des processus différents, possédant chacun les données relatives à son sous-domaine. 
 
 \paragraph{}MPI (\textit{Message Passing Interface}) décrit une librairie permettant de définir des topologies virtuelles et les transferts de données entre les nœuds d'une telle topologie et permettra donc de diviser le domaine selon une grille cartésienne de processus. Chaque case d'une topologie calculera une petite partie de la solution globale mais pourra le faire en parallèle des autres. La figure \ref{fig:globaldom} représente un domaine en 2D avec en bleu ses bordures physiques. La figure \ref{fig:partdom} montre un partitionnement de ce domaine en 4 sous-domaines, chacun possédant de nouvelles bordures.
 
@@ -29,12 +29,12 @@ De plus, la charge de calcul serait colossale; les mesures de la version séquen
 \end{figure}
 
 
-\paragraph{}Cependant, comme vu dans l'introduction, les équations de Navier-Stokes sont résolues par l'application. Pour résoudre ces équations aux dérivées partielles (\textit{PDEs: Partial Differential Equations}) lorsque le domaine est partitionné, il faut utiliser des méthodes de décomposition de domaine. Ces sont des méthodes numériques permettant de résoudre des problèmes d'algèbre linéaire sur des machines parallèles, notamment dans le cadre des simulations scientifiques, en modifiant le traitement réalisé sur les bordures artificielles (bordures induites par la décomposition).\cite{dolean+jolivet+nataf}
+\paragraph{}Cependant, pour résoudre les équations aux dérivées partielles (\textit{PDEs: Partial Differential Equations}) lorsque le domaine est partitionné, il faut utiliser des méthodes de décomposition de domaine. Ces sont des méthodes numériques permettant de résoudre des problèmes d'algèbre linéaire sur des machines parallèles, notamment dans le cadre des simulations scientifiques, en modifiant le traitement réalisé sur les bordures artificielles (bordures induites par la décomposition).\cite{dolean+jolivet+nataf}
 
 
 \subsubsection{Approche numérique}\label{sec:numerical_dom_decompo}
 
-\paragraph{}Chaque processus ne peut donc pas travailler de manière totalement indépendante. En effet, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Pour les points ne se trouvant pas sur les bordures du domaine, la dérivée au point $u$ sur la direction $x$ est calculée grâce au schéma:
+\paragraph{}Chaque processus ne peut donc pas travailler de manière totalement indépendante. Dans NTMIX, une méthode compacte est utilisée pour calculer les gradients des différents champs \cite{Hirsch:1988:NCI:63653}. Pour les points ne se trouvant pas sur les bordures du domaine, la dérivée au point $u$ sur la direction $x$ est calculée grâce au schéma:
 
 \begin{equation}\label{eq:pade}
 3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) 
@@ -44,7 +44,7 @@ De plus, la charge de calcul serait colossale; les mesures de la version séquen
 $\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 points la précédant et des 2 points la suivant ainsi que des dérivées des points l'encadrant. Une telle méthode implique donc que la dérivée en un point est dépendante des valeurs de tous les autres points du champ. 
 
 
- Comme on peut le voir sur la figure \ref{fig:dependencies}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manque d'information pour réaliser les calculs, pouvant entraîner une perte de précision des résultats de la simulation. Pour résoudre ce problème, il est possible de créer des zones de recouvrement entre les différents sous-domaines, permettant ainsi d'avoir accès aux points nécessaires aux calculs des dérivées. Ces zones sont représentées en gris sur la figure \ref{fig:depdomover} (ici les zones de recouvrement sont représentées par une seule case pour la clarté du schéma mais la taille de ces zones dépend de la méthode numérique utilisée). L'ensemble des schémas sont également en 2D pour faciliter la lecture.
+ Comme on peut le voir sur la figure \ref{fig:dependencies}, après le partitionnement du domaine, les points se trouvant sur les bordures internes (bordures entre processus) manquent d'information pour réaliser les calculs, pouvant entraîner une perte de précision des résultats de la simulation. Pour résoudre ce problème, il est possible de créer des zones de recouvrement entre les différents sous-domaines, permettant ainsi d'avoir accès aux points nécessaires aux calculs des dérivées. Ces zones sont représentées en gris sur la figure \ref{fig:depdomover} (ici les zones de recouvrement sont représentées par une seule case pour la clarté du schéma mais la taille de ces zones dépend de la méthode numérique utilisée). L'ensemble des schémas sont également en 2D pour faciliter la lecture.
 
 
 
@@ -69,9 +69,7 @@ $\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 po
 
 \paragraph{}La mise en œuvre efficace de l'approche numérique présentée ci-dessus sur les plates-formes parallèles a fait l'objet d'études \cite{Stoessel:1994:DNS:199617.199626,Hirsch:1988:NCI:63653} et la résolution par décomposition de domaine semble être la plus efficace. Le but est de résoudre localement le problème global. Nous nous intéressons ici aux 2 approches présentées dans l'étude \cite{Baum98dnsof}:
 
-%\begin{itemize}
-%\item \textbf{Méthode Schwarz}:
-\paragraph{Méthode Schwarz}: elle consiste à résoudre chaque sous-système avec les conditions limites de Dirichlet, conditions imposées aux limites d'une équation aux dérivées partielles permettant de spécifier les valeurs que la solution doit prendre sur les bordures d'un domaine. Pour ça, la condition (\ref{eq:pade}) est modifiée sur les frontières par:
+\paragraph{Méthode Schwarz}: elle consiste à résoudre chaque sous-système avec des conditions limites de type Dirichlet, permettant de spécifier les valeurs que la solution doit prendre sur les bordures d'un domaine. Pour cela, l'expression (\ref{eq:pade}) est modifiée sur les frontières par:
 
 \begin{equation}\label{eq:dirichlet}
 3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i}  = \frac{1}{h}\left(  \frac{1}{4} \left( u_{i+2}-u_{i-2} \right) + 7 \left( u_{i+1} - u_{i-1} \right) \right) - 3 \delta u_{i+1}
@@ -79,8 +77,7 @@ $\left( \frac{\partial u}{\partial x}\right) _{i}$ est donc dépendante des 2 po
 
 Le terme $3 \delta u_{i+1}$ est une approximation de la dérivée sur la frontière calculée par le domaine adjacent. Cette méthode nécessite donc un couplage fort entre les sous-domaines adjacents.
 
-%\item \textbf{Problème local modifié}
-\paragraph{Problème local modifié}: cette seconde méthode permet de réduire l'importance du couplage de la méthode précédente. Aux frontières des sous-domaines, le schéma utilisé pour les bordures physiques non-réfléchissantes est appliqué \cite{Stoessel:1994:DNS:199617.199626}:
+\paragraph{Problème local modifié}: cette seconde méthode permet de réduire l'importance du couplage de la méthode précédente. Aux frontières des sous-domaines, le schéma utilisé pour les bordures physiques est appliqué \cite{Stoessel:1994:DNS:199617.199626}:
 
   \begin{subequations}
     \begin{align}
@@ -98,7 +95,7 @@ Le terme $3 \delta u_{i+1}$ est une approximation de la dérivée sur la fronti�
 %$$\left( \frac{\partial u}{\partial x}\right) _{n_x-2} + 4 \left( \frac{\partial u}{\partial x}\right) _{n_x-1}  +  \left( \frac{\partial u}{\partial x}\right) _{n_x} = \frac{1}{h}\left( \frac{1}{3} \left( u_{n_x} - u_{n_x-2} \right) \right)$$
 
 
-Les schémas (\ref{eq:schem1}) et (\ref{eq:schemnx}) sont appliqués pour les points $1$ et $n_x$; le schéma (\ref{eq:schem-2nx-1}) pour les points $i=2 \text{ et } i=n_x-1$. Ce sont des schémas décentrés qui réduisent donc la précision de la solution mais qui permettent de calculer un pas complet de l'intégration de Runge-Kutta (sec. \ref{sec:comms}), sans aucun couplage entre les sous-domaines. Du fait de leurs précisions moindre, il est cependant nécessaire d'utiliser des régions de recouvrement plus grandes qu'avec la méthode précédente.
+Les schémas (\ref{eq:schem1}) et (\ref{eq:schemnx}) sont appliqués pour les points $1$ et $n_x$; le schéma (\ref{eq:schem-2nx-1}) pour les points $i=2 \text{ et } i=n_x-1$. Ce sont des schémas décentrés qui réduisent donc la précision de la solution mais qui permettent de calculer un pas complet de l'intégration de Runge-Kutta (sec. \ref{sec:comms}), sans aucun couplage entre les sous-domaines. Du fait de leur précision moindre, il est cependant nécessaire d'utiliser des régions de recouvrement plus grandes qu'avec la méthode précédente.
 %\end{itemize}
 
 

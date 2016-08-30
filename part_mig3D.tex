@@ -2,9 +2,9 @@
 \label{sec:part1}
 
 \subsection{Travail préliminaire}
-Une grande partie du temps en début du stage a été consacré à la prise en main de NTMIX. En effet NTMIX est un code d'environ 30000 lignes de codes ($\approx 25000$ + $\approx 5000$ pour CHEMKIN). Pour me familiariser avec NTMIX, j'ai utilisé Allinea DDT, un debugger. Il permet d'observer le comportement d'un programme, de voir l'ordre d'exécution des différentes fonctions, et ainsi comprendre un peu mieux son déroulement. C'est aussi durant cette période que j'ai pu discuter avec mes encadrants afin d'affiner les objectifs du stage.
+Une grande partie du temps en début du stage a été consacrée à la prise en main de NTMIX. En effet NTMIX est un code d'environ 30000 lignes de codes ($\approx 25000$ + $\approx 5000$ pour CHEMKIN). Pour me familiariser avec NTMIX, j'ai utilisé Allinea DDT, un debugger. Il permet d'observer le comportement d'un programme, de voir l'ordre d'exécution des différentes fonctions, et ainsi comprendre un peu mieux son déroulement. C'est aussi durant cette période que j'ai pu discuter avec mes encadrants afin d'affiner les objectifs du stage.
 
-\paragraph{Gestion du projet}Afin de faciliter le développement, j'ai utilisé \textit{git} un logiciel de gestion de versions. Il permet de stocker l'ensemble des fichiers modifiés en respectant la chronologie de ces changements. Il est donc possible de garder une trace de toutes les modifications réalisées sur le code original, autorisant ainsi à revenenir à une version précédente dans le cas où le code modifié serait faux.
+\paragraph{Gestion du projet}Afin de faciliter le développement, j'ai utilisé \textit{git} un logiciel de gestion de versions. Il permet de stocker l'ensemble des fichiers modifiés en respectant la chronologie de ces changements. Il est donc possible de garder une trace de toutes les modifications réalisées sur le code original, autorisant ainsi à revenir à une version précédente dans le cas où le code modifié serait faux.
  
 \subsection{Migration de NTMIX}
 Après cette période et avant de commencer à développer une version en 3 dimensions de NTMIX, j'ai dû moderniser le code. En effet, NTMIX a été développé en Fortran 77 ce qui ne permettait pas l'allocation dynamique de tableau; l'ensemble des variables étaient allouées de manière statique ce qui augmentait la taille de l'exécutable et réduisait grandement la flexibilité; en effet, il était nécessaire de recompiler le programme à chaque changement de la taille du maillage. Pour résoudre ce problème, il m'a été demandé de migrer le code du standard Fortran 77 au standard Fortran 90.
@@ -23,7 +23,7 @@ L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et 
 
 \subsubsection{Gestion de la mémoire}En Fortran, les blocs COMMON permettent de définir des zones mémoires globales, accessibles depuis n'importe où dans le code. Le problème est qu'il faut répliquer ce bloc à chaque endroit du code où les variables qu'il contient doivent être utilisées, le plus souvent avec des instructions non-standard du Fortran. Un autre problème est qu'il faut définir la taille des tableaux contenus dans ces blocs à la compilation, ce qu'y va à l'encontre de mon objectif. Pour pallier ces problèmes, ces blocs ont été transformés en modules (introduits en Fortran 90) qui permettent également d'avoir une zone de mémoire globale mais les tailles des tableaux peuvent être précisées à l'exécution.
 
-\subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour génèrer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permettent de structurer de grandes quantités de données. La figure \ref{fig:hdf5_struct} montre un exemple d'entête de fichier HDF5 généré par l'application; les ensembles X,Y et Z contiennent les coordonnées des points du domaine de calcul dans des tableaux monodimensionnels dont le type est précisé (ici des nombres à virgule flotante de 64 bits) et les autres ensembles de données contiennent les valeurs des différentes variables de la simulation (ici dans dans des matrices).
+\subsubsection{Post-traitement}NTMIX génère des fichiers binaires contenant l'état physique de la simulation à un instant donné. Un programme annexe à NTMIX permettait de transformer ces fichiers en fichiers pouvant être visualisés grâce à Plot3D. Ce code ne fonctionnant plus, il a été modifié pour générer des fichiers HDF5 (\textit{Hierarchical Data Format}), un format très répandu dans la communauté CFD, qui permet de structurer de grandes quantités de données. La figure \ref{fig:hdf5_struct} montre un exemple d'entête de fichier HDF5 généré par l'application; les ensembles X,Y et Z contiennent les coordonnées des points du domaine de calcul dans des tableaux monodimensionnels dont le type est précisé (ici des nombres à virgule flottante de 64 bits) et les autres ensembles de données contiennent les valeurs des différentes variables de la simulation (ici dans dans des matrices).
 
 \begin{figure}[!ht]
   \centering
@@ -31,7 +31,7 @@ L'utilisation de ces expressions m'a donc permis de gagner beaucoup de temps et 
   \caption{\label{fig:hdf5_struct} Structure d'un fichier HDF5}
 \end{figure}
 
-Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (\textit{eXtensible Data Model and Format}). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet de définir un maillage et une topologie d'un domaine grâce aux coordonnées des points présentes dans le fichier HDF5. Les valeurs des variables seront ensuite lues depuis les différents ensemble de données présents dans le fichier HDF5 et associées au point du maillage correspondant.
+Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visualisation, j'y ai donc joint des fichiers XDMF (\textit{eXtensible Data Model and Format}). Ce format a été développé pour le calcul haute performance et notamment pour permettre la visualisation des données par des logiciels comme ParaView ou EnSight. Il permet de définir un maillage et une topologie d'un domaine grâce aux coordonnées des points présentes dans le fichier HDF5. Les valeurs des variables seront ensuite lues depuis les différents ensembles de données présents dans le fichier HDF5 et associées au point du maillage correspondant.
 
 
 
@@ -54,7 +54,7 @@ Cependant, ces fichiers ne peuvent être directement lus par un logiciel de visu
 Pour vérifier que les modifications réalisées ne changeaient pas le comportement du programme, j'ai écrit un script permettant de comparer les résultats fournis par ma version avec ceux du programme initial. Ce script génère des fichiers d'initialisation de NTMIX avec différentes configurations du domaine (permettant ainsi de s'assurer que toutes les régions du code soient exécutées). Le script lance ensuite le programme initial et la version modifiée avec ces fichiers puis compare les résultats obtenus par chacune des versions.
 
 
-\paragraph{}Avec l'apparition de l'allocation dynamique, beaucoup de problèmes peuvent apparaître; mémoire non désallouée entrainant des fuites de mémoires (pouvant entrainer une saturation de la mémoire de la machine ainsi qu'un plantage du code), erreur sur les tailles des tableaux entraînant des erreurs de segmentation (tentative d'accès à des zones mémoire n'appartenant pas au programme).
+\paragraph{}Avec l'apparition de l'allocation dynamique, beaucoup de problèmes peuvent apparaître; mémoire non désallouée entrainant des fuites de mémoire (pouvant entrainer une saturation de la mémoire de la machine ainsi qu'un plantage du code), erreur sur les tailles des tableaux entraînant des erreurs de segmentation (tentative d'accès à des zones mémoire n'appartenant pas au programme).
 J'ai donc utilisé Valgrind, un outil permettant notamment d'analyser la mémoire d'un programme durant son exécution autorisant ainsi à vérifier l'apparition de tels problèmes.
 
 
@@ -72,25 +72,25 @@ Plusieurs parties du code prévoyaient déjà le passage du code en 3 dimensions
 
 \subsubsection{Calcul des gradients}%Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'ils prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
 
-Les gradients permettent de calculer l'évolution spatiale des grandeurs physiques (densité, vitesse, énergie, etc.). Le gradient pour une fonction bidimensionnelle $f(x,y)$ était donc décrit comme suit:
+Les gradients permettent de calculer l'évolution spatiale des grandeurs physiques (masse volumique, vitesse, énergie, etc.). Le gradient pour une fonction bidimensionnelle $f(x,y)$ s'écrit comme suit:
 $$\nabla f(x,y) =\left(\frac{\partial f}{\partial x}(x,y),\frac{\partial f}{\partial y}(x,y)\right) $$
 
-En 3D, les fonctions devant être dérivées sont dépendantes de $(x,y,z)$, les dérivées se réalisent maintenant sur un espace et non plus sur un plan:
-$$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}{\partial y}(x,y,z)\right)$$
-
-
-Il existe plusieurs dérivées selon les conditions aux frontières de la simulation (périodique, apériodique, symétrique); pour chacune de ces méthodes de dérivation, il a fallu ajouter les calculs de $\frac{\partial f}{\partial z}$ qui n'étaient pas présent dans cette version de NTMIX ce qui amène à la version finale du calcul des gradients:
+En 3D, les fonctions devant être dérivées sont dépendantes de $(x,y,z)$, les dérivées se réalisent maintenant sur un volume et non plus sur un plan:
 
 $$ \nabla f(x,y,z) =\left(\frac{\partial f}{\partial x}(x,y,z),\frac{\partial f}{\partial y}(x,y,z),\frac{\partial f}{\partial z}(x,y,z)\right)$$
 
 
+Il existe plusieurs dérivées selon les conditions aux frontières de la simulation (périodique, apériodique, symétrique); pour chacune de ces méthodes de dérivation, il a fallu ajouter les calculs de $\frac{\partial f}{\partial z}$ qui n'étaient pas présent dans cette version de NTMIX.
+
+
+
 
 \subsubsection{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit être très précise et ne fournit pas de moyen de minimiser la création d'ondes d'instabilités numériques qui se propagent ensuite dans le domaine, sont réfléchies aux frontières et peuvent générer de nouvelles ondes physiques\cite{baritaud1996direct}. Ce procédé entraîne l'apparition d'oscillations non-physiques qui faussent les résultats de la simulation. Pour pallier ce problème, il est courant de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique. Mais dans le cas de l'étude des écoulements réactifs, il est nécessaire de traiter les frontières. Pour résoudre ce problème, la méthode NSCBC (\textit{Navier-Stokes Characteristic Boundary Conditions}) est utilisé dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
+Une simulation DNS doit traiter les frontières de façon précise, ce qui est difficile du fait du manque d'information aux points extérieurs, impliquant un décentrement du schéma numérique. De plus, des oscillations non-physiques peuvent apparaître et fausser les résultats de la simulation. Pour éviter ce problème, il est courant en DNS de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique, mais ce n'est pas toujours possible. Pour éviter les oscillations, la méthode NSCBC (\textit{Navier-Stokes Characteristic Boundary Conditions}) est utilisée dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
+\cite{baritaud1996direct}
 
 
-
-Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et a donc dû être ajouter. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$.
+Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et a donc dû être ajoutée. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$.
 
 \subsubsection{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement celles permettant de lancer les tests présentés dans la section suivante.
 
@@ -106,13 +106,13 @@ Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la
 % \end{itemize}
 
 \subsubsection{Validation}\label{sec:3D-validation}
-Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en précisant la 3ème dimension à 1 ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
+Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en fixant la 3ème dimension à 1 point ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
 
 \begin{itemize}
 \item Écoulements uniformes: un flux uniforme traverse le domaine selon un axe; le flux étant constant, les dérivées doivent rester nulles et les vitesses ne doivent pas varier
-\item Un front de flamme (une zone dans laquelle se déroule la combustion):
+\item Un front de diffusion:
   \begin{itemize}
-  \item Vitesse nulle: le front de flamme doit rester statique et un phénomène de diffusion doit être observé (mouvement de molécules d'une région de haute concentration vers une région de faible concentration)
+  \item Vitesse nulle: le front de diffusion doit rester quasi-statique et un phénomène de diffusion doit être observé (mouvement de molécules d'une région de haute concentration vers une région de faible concentration)
   \item Vitesse non-nulle: en plus du phénomène de diffusion, la convection doit également apparaître (mouvement de groupe de molécules au sein d'un fluide)
   \end{itemize}
 \item Turbulence homogène isotrope
@@ -168,7 +168,7 @@ Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et 
 
 
 
-\paragraph{Turbulence homogène isotrope}Ce cas de test est moins trivial que les autres. Il simule cette fois-ci un flux turbulent (un flux dans lequel la vitesse varie en tous points, de manière imprévisible). Homogène et isotrope se rapporte à certaines caractéristiques d'un tel flux. 
+\paragraph{Turbulence homogène isotrope}Ce cas de test est moins trivial que les autres. Il simule cette fois-ci un flux turbulent (un flux dans lequel la vitesse varie en tous points, de manière aléatoire, mais avec des propriétés statistique). Homogène et isotrope se rapporte à certaines caractéristiques d'un tel flux. 
 
 %\begin{figure}[ht]
 %  \centering

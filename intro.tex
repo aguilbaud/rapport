@@ -1,7 +1,7 @@
 \section{Introduction}
 \subsection{Le Cerfacs}\label{sec:intro}
 
-Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille pour ses actionnaires (Airbus Group, Cnes, EDF, Météo France, Onera Safran et Total) à la résolution de problèmes scientifiques et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée. Il travaille également en partenariat avec le CNRS, l'Irit, le CEA ainsi que l'Inria.
+Le Cerfacs (Centre Européen de Recherche et de Formation Avancée en Calcul Scientifique) est un centre de recherche spécialisé dans le calcul scientifique et la simulation numérique. Créé en 1987, il travaille pour ses actionnaires (Airbus Group, Cnes, EDF, Météo France, Onera, Safran et Total) à la résolution de problèmes scientifiques et techniques liés au climat, à l'aéronautique, au spatial et à l'environnement par la simulation numérique nécessitant une puissance de calcul élevée. Il travaille également en partenariat avec le CNRS, l'Irit, le CEA ainsi que l'Inria.
 
 
 Le personnel du Cerfacs est réparti en équipes:
@@ -42,13 +42,13 @@ Le développement d'une version 3D est motivé par le fait que NTMIX\_CHEMKIN ut
 Cependant, une simulation DNS n'utilise pas de modèle de turbulence. Il sera nécessaire de paralléliser la version 3D de NTMIX\_CHEMKIN pour permettre au code de traiter de grands maillages ($\approx 10^9$ points) en un temps raisonnable.
 
 
-\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, je devrai moderniser le code avant de développer une version 3D de celui-ci. Cette partie permettra d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents et sera présentée en section \ref{sec:part1}
+\paragraph{}Pour atteindre ces objectifs, il sera nécessaire de procéder par étapes; dans un premier temps, j'ai dû moderniser le code avant de développer une version 3D de celui-ci. Cette partie a permis d'obtenir une première version tridimensionnelle, testée et validée de NTMIX utilisant des concepts de programmation plus récents et sera présentée en section \ref{sec:part1}
 
-Dans la section \ref{sec:part2}, je m'intéresserai au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.
+Dans la section \ref{sec:part2}, je me suis intéressé au développement d'une version parallèle de l'application et aux modifications induites par une telle version. Cette version devra permettre d'exécuter des simulations sur des machines parallèles.
 
 Enfin, dans une dernière partie (section \ref{sec:part3}), je mesurerai les performances de NTMIX sur les calculateurs internes du Cerfacs afin d'essayer de tirer les meilleurs performances possibles.
 
-\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs en combustion présents au Cerfacs.
+\paragraph{}A terme, la version finale de NTMIX permettra de faciliter la compréhension de phénomènes complexes liés à la mécanique des fluides et pourra aboutir à la rédaction de publications scientifiques par les chercheurs en combustion du Cerfacs.
 
 \subsection{Présentation de la mécanique des fluides}
 \subsubsection{Mécanique des fluides numérique}
@@ -65,13 +65,13 @@ Dans NTMIX, ce sont les équations de Navier-Stokes; équations aux dérivées p
 Cependant, la mécanique des fluides numérique se base sur des versions discrétisées de ces équations. Pour NTMIX, le domaine de calcul (espace) est divisé en volumes élémentaires (discrétisation spatiale) selon une approche structurée (maillage structuré) qui consiste à découper l'espace en cellules régulièrement espacées selon toutes les directions du domaine.
 
 
-\subsubsection{Modèle de turbulence}
+\subsubsection{Simulation de la turbulence}
 Dans un écoulement turbulent, des tourbillons instables apparaissent à toutes les échelles et interagissent entre eux. Pour pouvoir simuler un tel comportement, il existe 3 approches différentes:
 
 \begin{itemize}
 \item la méthode de simulation directe (\textit{DNS: Direct Numerical Simulation}): elle consiste à utiliser un maillage plus fin que le plus petit tourbillon attendu (fig. \ref{fig:dns})
 \item la simulation des grandes échelles (\textit{LES: Large Eddy Simulation}): un modèle de turbulence est utilisé pour les plus petits tourbillons, permettant ainsi d'utiliser un maillage plus grossier (fig. \ref{fig:les})
-\item le moyennage temporel des équations de Navier-Stokes (\textit{RANS: Reynold Averaged Navier-Stokes Simulation})
+\item la simulation de l'écoulement moyen statistique (\textit{RANS: Reynold Averaged Navier-Stokes Simulation})
 \end{itemize} 
 
 
