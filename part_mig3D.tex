@@ -68,7 +68,7 @@ Plusieurs parties du code prévoyaient déjà le passage du code en 3 dimensions
 
 \paragraph{}Même avec les points précédents, beaucoup de modifications étaient nécessaires avant d'obtenir une version 3D fonctionnelle. Pour minimiser les erreurs pouvant être induites par ce changement, j'ai dans un premier temps décidé de laisser la nouvelle dimension à une taille de 1. En effet, si la dimension ajoutée est de 1, le programme doit avoir un comportement identique à la version 2D. Les variables conservatives de la simulation (densité, vitesses, énergie..) étaient toutes représentées par des tableaux en 2 dimensions. J'ai donc progressivement remplacé ces tableaux par d'autres en 3D, toujours avec la dernière dimension de taille 1,  me permettant ainsi de vérifier les résultats obtenus tout au long du développement. Lorsque je remplaçais ces tableaux, je modifiais en même temps les nombreuses boucles de calcul parcourant ceci (un parcours sur X et Y devient un parcours sur X,Y et Z). Une fois ces modifications terminées, et le comportement du programme validé, j'ai augmenté la taille de la troisième dimension et me suis intéressé aux problèmes suivants.
 
-%1/sqrt(1)*exp(-((coordsX/(2*sqrt(1)))^2))
+
 
 \subsubsection{Calcul des gradients}%Les gradients indiquent la façon dont les grandeurs physiques (densité, vitesse, énergie, etc.) évoluent au cours du temps. Maintenant que la 3ème dimension était différente de 1, il était nécessaire que les calculs des gradients soient modifiés. Ces calculs s'effectuaient sur un plan; il a donc fallu les modifier pour qu'ils prennent en compte tout l'espace. Il a fallu également ajouter les calculs de gradients selon l'axe Z.
 
@@ -86,11 +86,11 @@ Il existe plusieurs dérivées selon les conditions aux frontières de la simula
 
 
 \subsubsection{Conditions limites}\label{sec:nsbc}
-Une simulation DNS doit traiter les frontières de façon précise, ce qui est difficile du fait du manque d'information aux points extérieurs, impliquant un décentrement du schéma numérique. De plus, des oscillations non-physiques peuvent apparaître et fausser les résultats de la simulation. Pour éviter ce problème, il est courant en DNS de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique, mais ce n'est pas toujours possible. Pour éviter les oscillations, la méthode NSCBC (\textit{Navier-Stokes Characteristic Boundary Conditions}) est utilisée dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
+Une simulation DNS doit traiter les frontières de façon précise, ce qui est difficile du fait du manque d'information aux points extérieurs aux frontières, impliquant un décentrement du schéma numérique. De plus, des oscillations non-physiques peuvent apparaître et fausser les résultats de la simulation. Pour éviter ce problème, il est courant en DNS de supprimer les conditions aux frontières en utilisant un domaine de calcul périodique, mais ce n'est pas toujours possible. Pour éviter les oscillations, la méthode NSCBC (\textit{Navier-Stokes Characteristic Boundary Conditions}) est utilisée dans NTMIX. J'ai donc dû implémenter la version 3D de cette méthode à l'aide des équations fournies par Poinsot et Lele (1992)\cite{POINSOT1992104}. Les équation \textit{NSCBC} sur la direction $x$ pour un cas tridimensionnel sont présentées en annexe \ref{app:nscbc}. 
 \cite{baritaud1996direct}
 
 
-Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et a donc dû être ajoutée. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$.
+Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la vitesse sur l'axe Z n'existait pas) et a donc dû être ajoutée. En 3D, les équations (\ref{eq:l2}) et (\ref{eq:l3}) changent selon la direction (ex: lorsqu'on est sur la dimension $y$, $\mathcal{L}_2 = v \frac{\partial u}{\partial y}$ et $\mathcal{L}_3 = v \frac{\partial w}{\partial y}$ avec $u,v$ et $w$ les champs des vitesses selon les axes $x,y$ et $z$).
 
 \subsubsection{Initialisation}Il a également été nécessaire de modifier certaines fonctions d'initialisation afin qu'elles prennent en compte la 3ème dimension. Je n'ai pas modifié toutes les nombreuses fonctions d'initialisation mais seulement celles permettant de lancer les tests présentés dans la section suivante.
 
@@ -127,8 +127,10 @@ Comme dit précédemment, les dérivées doivent être nulles dans ce cas et la 
 %  \caption{\label{fig:uniform_flow}Ecoulement uniforme}
 %\end{figure}
 
-\paragraph{Front de flamme}
-Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et la concentration d'une espèce est modélisée par une gaussienne centrée simplifiée en $e^{-(x^2)}$ et l'autre par $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration totale de 1 en tout point du domaine. Pour observer l'effet de diffusion, nous utilisons la fonction dérivée d'une gaussienne: $f(x,t)=\frac{1}{t}e^{f}$. Sur la figure \ref{fig:diff}, nous pouvons observer en bleue la valeur initiale d'une espèce, en vert sa valeur au temps $t$ de la simulation et en rouge la valeur théorique.
+\paragraph{Front de diffusion}
+Un cas simple a été utilisé: seules 2 espèces chimiques sont utilisées, initialisées par une gaussienne centrée $e^{-(x^2)}$ et $1-e^{-(x^2)}$ permettant ainsi d'avoir une concentration totale de 1 en tout point du domaine. Cette initialisation permet d'obtenir une solution analytique du problème: $\frac{1}{\sqrt{t}}e^{-\left(\frac{x}{2\sqrt{t}}\right)^2}$.
+
+%1/sqrt(1)*exp(-((coordsX/(2*sqrt(1)))^2))
 
 % $f(x,t_0)=e^{\frac{-(x-x_0)^2}{\sigma^2}}$
 % \begin{figure}[ht]
@@ -168,7 +170,7 @@ Un cas simple a été utilisé pour ce front de flamme; 2 espèces chimiques et 
 
 
 
-\paragraph{Turbulence homogène isotrope}Ce cas de test est moins trivial que les autres. Il simule cette fois-ci un flux turbulent (un flux dans lequel la vitesse varie en tous points, de manière aléatoire, mais avec des propriétés statistique). Homogène et isotrope se rapporte à certaines caractéristiques d'un tel flux. 
+\paragraph{Turbulence homogène isotrope}Ce cas de test est moins trivial que les autres. Il simule cette fois-ci un flux turbulent (un flux dans lequel la vitesse varie en tous points, de manière aléatoire, mais avec des propriétés statistique) homogène et isotrope.
 
 %\begin{figure}[ht]
 %  \centering
