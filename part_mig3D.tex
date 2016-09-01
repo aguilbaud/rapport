@@ -106,7 +106,7 @@ Dans la version 2D, l'équation (\ref{eq:l3}) n'était pas présente car $w$ (la
 % \end{itemize}
 
 \subsubsection{Validation}\label{sec:3D-validation}
-Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en fixant la 3ème dimension à 1 point ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX:
+Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comportement du programme 3D en fixant la 3ème dimension à 1 point ce qui m'a permis de comparer les résultats avec la version 2D. Plusieurs tests m'ont ensuite été suggérés pour valider le comportement en 3 dimensions de NTMIX. Tous ces tests sont réalisés sans combustion, qui n'est pas sensible à la 3D.
 
 \begin{itemize}
 \item Écoulements uniformes: un flux uniforme traverse le domaine selon un axe; le flux étant constant, les dérivées doivent rester nulles et les vitesses ne doivent pas varier
@@ -119,7 +119,7 @@ Comme dit précédemment (sec. \ref{sec:3dmeth}), j'ai d'abord testé le comport
 \end{itemize}
 
 \paragraph{Écoulements uniformes}
-Comme dit précédemment, les dérivées doivent être nulles dans ce cas et la simulation doit donc rester dans son état initial. Comme on peut le voir sur la figure \ref{fig:uniform_flow}, les vitesses selon les 3 axes sont restées constantes au cours du temps.
+Comme dit précédemment, les dérivées doivent être nulles dans ce cas et la simulation doit donc rester dans son état initial. Ce cas est le plus trivial car il ne dépend que de calculs simple de gradients. Il permet donc de mettre en évidence des erreurs ``grossières''.
  
 %\begin{figure}[ht]
 %  \centering

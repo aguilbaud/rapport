@@ -1,13 +1,15 @@
 \section*{Conclusion}\addcontentsline{toc}{section}{Conclusion}
 
-\paragraph{}A l'issu de ce stage, une version séquentielle et tridimensionnelle de NTMIX est fonctionnelle. Pour cela, j'ai moderniser le code de simulation, développé en Fortran 77, afin qu'il puisse utiliser la mémoire dynamique, facilitant ainsi son utilisation. J'ai ensuite modifié l'application afin qu'elle puisse traiter des simulations tridimensionnelles au lieu de bidimensionnelles.
+\paragraph{}À l'issu de ce stage, j'ai pu développé une version séquentielle et tridimensionnelle de NTMIX. Pour cela, j'ai modernisé le code de simulation, développé en Fortran 77, afin qu'il puisse utiliser l'allocation de mémoire dynamique, facilitant ainsi son utilisation. J'ai ensuite modifié l'application afin qu'elle puisse traiter des simulations tridimensionnelles au lieu de bidimensionnelles. Cette version a été testée et validée.
 
 
-\paragraph{}J'ai également développé une version parallèle de cette application pouvant s'exécuter sur des clusters de calculs grâce à MPI. Cette version permettra de traiter de plus grands maillage que la version séquentielle, permettant ainsi d'améliorer la précision des simulation. Cependant, au moment de ou j'écris ce rapport, je n'ai pas encore pu mesurer les performances de la version parallèle de NTMIX dans des conditions réelles d'utilisation. Ce point ferra donc l'objet de la fin du stage.
+\paragraph{}J'ai également développé une version parallèle de cette application pouvant s'exécuter sur des clusters de calculs grâce à MPI. Cette version permettra de traiter de plus grands maillage que la version séquentielle, permettant ainsi d'améliorer la précision des simulations. Cependant, au moment où j'écris ce rapport, je n'ai pas encore pu mesurer les performances de la version parallèle de NTMIX dans des conditions réelles d'utilisation. Ce point fera donc l'objet de la fin du stage et pourra éventuellement entrainer des modifications du code présenté dans ce rapport.
 
 
 
 
 \paragraph{}Cependant, il est encore possible d'améliorer les performances de NTMIX. Par exemple, la quantité de mémoire utilisée peut encore être réduite. En effet, NTMIX a été pensé avec une approche mémoire statique; même si je l'ai modifié pour qu'il puisse utiliser de la mémoire dynamique, certaines parties du code devraient être entièrement réécrites pour mieux correspondre à cette nouvelle approche. 
-NTMIX réalise également de nombreuses opérations sur des matrices et il serait donc intéressant d'étudier ses performances avec l'utilisation de librairies \textit{BLAS}, mais ces modifications nécessiteraient, comme pour de nombreux "vieux" programme scientifique, de réécrire entièrement le code et ne pouvaient donc pas faire l'objet de ce stage.
+NTMIX réalise également de nombreuses opérations sur des matrices et il serait donc intéressant d'étudier ses performances avec l'utilisation de librairies \textit{BLAS}, mais ces modifications nécessiteraient, comme pour de nombreux "vieux" programmes scientifique, de réécrire entièrement le code et ne pouvaient donc pas faire l'objet de ce stage.
 
+
+\paragraph{}Si les performances parallèles de NTMIX sont satisfaisantes, son utilisation permettra aux chercheurs du Cerfacs d'étudier précisément les phénomènes complexes liés à la combustion turbulente, et pourra fournir un support à leurs recherches et amener à la plublication d'article sur ce sujet.

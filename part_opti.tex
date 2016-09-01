@@ -181,49 +181,41 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 
 Comme on peut le voir sur les figures \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de maillage de $20^3$, environ 27Mo sont utilisés et pour un domaine de $30^3$, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un nœud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la vectorisation.
 
-\subsection{Performances parallèle}
+\subsection{Performances parallèle}\label{sec:scal}
 
-
-\subsubsection{Méthode de communication}
-Cette section traite des méthodes utilisées pour réaliser les communication entre les processus pour échanger les zones d'overlapping.
-
-%Avant de comparer les méthodes de recouvrement, je me suis dans un premier temps interréssé aux méthodes de communication utilisées pour la première méthode (\ref{sec:}). Pour cela, j'ai comparer la durée passée dans des communications pour chacune des méthode et ceux pour différentes taille de grille.
-
-
-%mesurer le temps d'exécution par point par pas de temps de chacune des méthodes pour différentes taille de grille.
-
-
-%\subsubsection{Méthode de recouvrement}
-%Je compare ici les 2 méthodes utilisée pour le recouvrement de domain présentées dans la partie précedente. Pour rappel: 
-
-
-
-%\subsubsection{Décomposition du domaine}
-%Le découpage du domaine est entièrement configurable par l'utilisateur, nous verons donc ici l'influence que ce découpage peut avoir sur le temps d'exécution du programme. 
+Note: les mesures n'ont pas encore été réalisés au moment où le rapport doit être rendu, elle feront l'objet du dernier mois de stage.
 
 %https://www.sharcnet.ca/help/index.php/Measuring_Parallel_Scaling_Performance
-\subsection{Scalabilité}\label{sec:scal}
+%\subsection{Scalabilité}\label{sec:scal}
 
 \subsubsection{Scalabilité forte}\label{sec:scal-strong}
-Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoûts induits par un programme parallèle.
+Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoûts induits par un programme parallèle. Pour cela, on mesure l'efficacité:
 
 $$E=\frac{t_1}{n\times t_n}$$ avec $t_i$ le temps d'exécution avec $i$ noeuds et $t_1$ le temps d'exécution avec un seul noeud. Plus cette valeur sera proche de 1, plus le code sera efficace.
 
 \paragraph{}On recherche donc une taille de problème la plus grande possible afin de pouvoir augmenter suffisamment le nombre de noeuds. Pour cela, il faut trouver une taille de problème qui occupe le plus de mémoire possible sur un noeud. J'ai utilisée MPS (\textit{MPI Performance Snapshot}) pour mesurer la mémoire utilisée par les processus MPI lors de l'exécution de NTMIX. On trouve que pour un domaine de $400^3$ points de maillage, la mémoire utilisée est d'environ 55Go. La mémoire disponible sur un noeud du cluster LENOVO est de 64Go donc cette taille de domaine sera utilisée pour mesurer la scalabilité forte de l'application.
 
 
-\begin{figure}[ht]
-  \centering
-  \includegraphics[scale=1.0]{gnuplot/bench_strong_nemo.pdf}
-  \caption{\label{fig:strong-nemo} }
-\end{figure}
+
+\paragraph{Cas périodique}
+On s'intéresse ici au cas périodique, tous les processus réalisent 2 communications dans toutes les directions car le recouvrement se produit entre tous les sous-domaines comme présenté sur la figure \ref{fig:per_overlap}. 
+
+
+\paragraph{Cas apériodiques}
+Dans ces cas, la quantité de données échangées par chaque processus est déséquilibrée car les bordures physiques sont traitées (fig. \ref{fig:per_overlap}). Nous étudierons donc ici les 2 méthodes de distribution des points de maillage présentées en section\ref{sec:equilibrage}.
+
+%\begin{figure}[ht]
+%  \centering
+%  \includegraphics[scale=1.0]{gnuplot/bench_strong_nemo.pdf}
+%  \caption{\label{fig:strong-nemo} }
+%\end{figure}
 
 
 
 
 
 \subsubsection{Scalabilité faible}\label{sec:scal-weak}
-Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Étant donné que le pattern de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les reduce pour le calcul du pas de temps maximal).
+Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Étant donné que le motif de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les opérations de reduce pour le calcul du pas de temps maximal).
 
 
 $$E=\frac{t_1}{t_i}$$ avec $t_i$ le temps d'exécution avec $i$ processus.
