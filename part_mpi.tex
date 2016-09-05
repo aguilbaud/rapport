@@ -239,21 +239,21 @@ Comme vu dans la section précédente, la méthode de décomposition de domaine 
 
 
 
-\begin{algorithm}
-  \caption{update}
-  \label{algo:update}
-  \begin{algorithmic}
-    \STATE {i=1}
-    \FOR{dim=1 \TO dim==ndim } 
-    \STATE {getNeighbors(dim,N1,N2)}
-    \STATE {send(sbuf(offset(i)), N1)}
-    \STATE {recv(rbuf(offset(i)), N1)}
-    \STATE {i=i+1}
-    \STATE {send(sbuf(offset(i)), N2)}
-    \STATE {recv(rbuf(offset(i)), N2)}
-    \ENDFOR
-  \end{algorithmic}
-\end{algorithm}
+%\begin{algorithm}
+%  \caption{update}
+%  \label{algo:update}
+%  \begin{algorithmic}
+%    \STATE {i=1}
+%    \FOR{dim=1 \TO dim==ndim } 
+%    \STATE {getNeighbors(dim,N1,N2)}
+%    \STATE {send(sbuf(offset(i)), N1)}
+%    \STATE {recv(rbuf(offset(i)), N1)}
+%    \STATE {i=i+1}
+%    \STATE {send(sbuf(offset(i)), N2)}
+%    \STATE {recv(rbuf(offset(i)), N2)}
+%    \ENDFOR
+%  \end{algorithmic}
+%\end{algorithm}
 
 
 

@@ -1,0 +1,4 @@
+"# nodes"	MPI	"Base comp"	"Comp overhead"	Efficiency	"Adjusted Eff"
+1		01.51	98.49		0     		1
+4		02.09	89		08.81350245	0.8601828162
+8		02.3	81.01691217 	16.68308783	0.6932848633
