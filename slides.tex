@@ -55,7 +55,7 @@
 \footnotesize
 \begin{tabular}{cc}
   Maître de stage & Enseignant responsable \\
-  Mme.~Isabelle \textsc{D'ast} &   Mr.~Samuel \textsc{Thibault} \\
+  Mme.~Isabelle \textsc{D'ast} &   M.~Samuel \textsc{Thibault} \\
   \end{tabular}
 \end{frame}
 
@@ -82,7 +82,7 @@
 
   
 \end{frame}
-
+%https://en.wikipedia.org/wiki/Types_of_mesh
 %https://en.wikipedia.org/wiki/Discretization_of_Navier%E2%80%93Stokes_equations
 \subsection{Mécanique des fluides numérique}
 \begin{frame}
@@ -94,6 +94,9 @@
   \item Résolution des équations de Navier-Stokes
   \item Discrétisation de l'espace
   \end{itemize}
+	\centering
+	\visible<2->{\includegraphics[scale=0.2]{regular-mesh.png}}
+	\visible<2->{\includegraphics[scale=0.2]{irregular-mesh.png}}
 \end{frame}
 
 
@@ -129,11 +132,11 @@
 \section{Présentation du sujet}
 \subsection{NTMIX\_CHEMKIN}
 \begin{frame}
-  \textit{NTMIX\_CHEMKIN}: solveur d'écoulements réactifs
+  \textit{NTMIX}: solveur d'écoulements réactifs
   \begin{itemize}
   \item bidimensionnel
   \item approche DNS
-  \item couplé avec \textit{CHEMKIN}
+  \item maillage structuré
   \end{itemize}
   Intérêt en recherche fondamentale
   
@@ -197,6 +200,14 @@
 \only<2>{$$3\left( \frac{\partial u}{\partial x}\right) _{i-1} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\left( \frac{\partial u}{\partial x}\right) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} \left( \mathunderline{ u_{i+2}}-\mathunderline{u_{i-2}} \right) + 7 \left( \mathunderline{u_{i+1}} - \mathunderline{u_{i-1}} \right) \right) $$}
 
 \only<3>{$$3\mathunderline{\left( \frac{\partial u}{\partial x}\right) _{i-1}} + 9\left( \frac{\partial u}{\partial x}\right) _{i} + 3\mathunderline{\left( \frac{\partial u}{\partial x}\right) _{i+1}} = \frac{1}{h}\left(  \frac{1}{4} \left( \mathunderline{ u_{i+2}}-\mathunderline{u_{i-2}} \right) + 7 \left( \mathunderline{u_{i+1}} - \mathunderline{u_{i-1}} \right) \right) $$}
+
+\vfill
+\centering
+\begin{tabular}{cc}
+
+\end{tabular}
+\only<2>{$$u$$\includegraphics[scale=0.3]{slide_deriv_1.png}$$\frac{\partial u}{\partial x}$$}
+\only<3>{\includegraphics[scale=0.3]{slide_deriv_2.png}}
 
 \end{frame}
 
