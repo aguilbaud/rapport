@@ -34,8 +34,8 @@ unset mxtics
 set title "Strong scalability efficiency"
 stats 'strong_per_nemo' using 0 nooutput
 
-plot for [i=0:(STATS_blocks - 1)] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
-
+#plot for [i=0:(STATS_blocks - 1)] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
+plot for [i=0:0] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
 
 #
 # Time percentage bargraph
