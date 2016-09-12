@@ -24,18 +24,19 @@ set ytics nomirror
 
 set terminal pdfcairo enhanced#font "Gill Sans,7"linewidth 2 rounded fontscale 1.0
 set output "bench_strong_nemo.pdf"
-set ylabel "Efficiency"
+set ylabel "Speedup"
 set xlabel "# of cores"
 set grid y
 set grid x
-set yrange [0:1.2]
+#set yrange [0:1.2]
 set xtics ("24" 1,"48" 2,"96" 4,"192" 8)
 unset mxtics
-set title "Strong scalability efficiency"
+set key inside left top
+set title "Speedup - 40 time step"
 stats 'strong_per_nemo' using 0 nooutput
 
 #plot for [i=0:(STATS_blocks - 1)] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
-plot for [i=0:0] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
+plot for [i=0:0] 'strong_per_nemo' index i u 1:5 t column  w lp ls 7 lc i+1 ps 0.5, '' index i u 1:1 t 'Maximal' w lp ls 7 lc i+1 ps 0.5
 
 #
 # Time percentage bargraph
@@ -58,7 +59,7 @@ set grid y
 unset xtics
 set xtics
 set ytics 10
-set title "Time repartition - Periodic case"
+set title "Time repartition - Periodic case  - 40 time step"
 
 plot 'strong_per_nemo2' using 2:xticlabel(1)  t column(2), for [i=3:4] '' using i:xticlabel(1) title column(i), '' using 5:xtic(1)  t col with lp ls 7 lw 2 ps 0.5 axes x1y2
 #,'' using 6:xtic(1)  t col with lp ls 7 lw 2 lc 1 ps 0.5 axes x1y2
