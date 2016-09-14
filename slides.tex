@@ -43,7 +43,7 @@
  \AtBeginSection[]
 {
   \begin{frame}
-    \frametitle{Table of Contents}
+    %\frametitle{Table of Contents}
     \tableofcontents[currentsection]
 	\addtocounter{framenumber}{-1}
 
@@ -109,7 +109,7 @@
 
   \centering
   \visible<2->{\includegraphics[scale=0.25]{regular-mesh.png}}
-  \visible<2->{\includegraphics[scale=0.25]{irregular-mesh.png}}
+  %\visible<2->{\includegraphics[scale=0.25]{irregular-mesh.png}}
   
 \end{frame}
 
@@ -151,8 +151,9 @@
   \begin{itemize}
   \item bidimensionnel
   \item approche DNS
-  \item maillage structuré
   \item résolution des équation de Navier-Stokes
+  \item maillage structuré
+  \item discrétisation temporelle (Runge-Kutta)
   \end{itemize}
   
   \vfill
@@ -193,8 +194,9 @@
   \begin{alertblock}{Limitations matérielles}
     \begin{itemize}
     \item     Mémoire globale nécessaire: 
-      $10^9pts \times (5+300) \times 8o \approx 2.2 \text{ To}$
-    \item     Temps de calcul: $10^9 pts\times(4\times10^{-6})s/p\times10000it\approx463 \text{ jours}$
+      $$10^9pts \times (5+300) \times 8o \approx 2.2 \text{ To}$$
+    \item     Temps de calcul: 
+      $$10^9 pts\times(4\times10^{-6})s/p\times10000it\approx463 \text{ jours}$$
     \end{itemize}
   \end{alertblock}
   
@@ -231,7 +233,7 @@
 
   %\only<3>{$$3\bigg( \frac{\partial u}{\partial x}\bigg) _{i-1} + 9\mathunderline{green}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i}} + 3\bigg( \frac{\partial u}{\partial x}\bigg) _{i+1} = \frac{1}{h}\left(  \frac{1}{4} ( \mathunderline{red}{ u_{i+2}}-\mathunderline{red}{u_{i-2}} ) + 7 ( \mathunderline{red}{u_{i+1}} - \mathunderline{red}{u_{i-1}} ) \right) $$}
 
-  \only<2->{$$3\only<4->{\mathunderline{red}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i-1}} + 9\only<2->{\mathunderline{green}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i}} + 3\only<4->{\mathunderline{red}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i+1}} = \frac{1}{h}\left(  \frac{1}{4} ( \only<3->{\mathunderline{red}}{ u_{i+2}}-\only<3->{\mathunderline{red}}{u_{i-2}} ) + 7 ( \only<3->{\mathunderline{red}}{u_{i+1}} - \only<3->{\mathunderline{red}}{u_{i-1}} ) \right) $$}
+  \visible<2->{$$3\only<4->{\mathunderline{red}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i-1}} + 9\only<2->{\mathunderline{blue}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i}} + 3\only<4->{\mathunderline{red}}{\bigg( \frac{\partial u}{\partial x}\bigg) _{i+1}} = \frac{1}{h}\left(  \frac{1}{4} ( \only<3->{\mathunderline{red}}{ u_{i+2}}-\only<3->{\mathunderline{red}}{u_{i-2}} ) + 7 ( \only<3->{\mathunderline{red}}{u_{i+1}} - \only<3->{\mathunderline{red}}{u_{i-1}} ) \right) $$}
 
   \renewcommand{\arraystretch}{1.2}
 
@@ -241,7 +243,7 @@
       \hline
       ... & $u_{i-3}$ & \only<3->{\cellcolor{red!70}}$u_{i-2}$ & \only<3->{\cellcolor{red!70}} $u_{i-1}$ & $u_{i}$ & \only<3->{\cellcolor{red!70}}$u_{i+1}$ & \only<3->{\cellcolor{red!70}}$u_{i+2}$ & $u_{i+3}$ & ... \\
       \hline
-      ... & $\frac{\partial u}{\partial x}_{i-3}$ & $\frac{\partial u}{\partial x}_{i-2}$ & $\only<4->{\cellcolor{red!70}}\frac{\partial u}{\partial x}_{i-1}$ & \cellcolor{green} $\frac{\partial u}{\partial x}_{i}$ & $\only<4->{\cellcolor{red!70}}\frac{\partial u}{\partial x}_{i+1}$ & $\frac{\partial u}{\partial x}_{i+2}$ & $\frac{\partial u}{\partial x}_{i+3}$  & ... \\
+      ... & $\frac{\partial u}{\partial x}_{i-3}$ & $\frac{\partial u}{\partial x}_{i-2}$ & $\only<4->{\cellcolor{red!70}}\frac{\partial u}{\partial x}_{i-1}$ & \cellcolor{blue!70} $\frac{\partial u}{\partial x}_{i}$ & $\only<4->{\cellcolor{red!70}}\frac{\partial u}{\partial x}_{i+1}$ & $\frac{\partial u}{\partial x}_{i+2}$ & $\frac{\partial u}{\partial x}_{i+3}$  & ... \\
       \hline
   \end{tabular}}
 
@@ -251,7 +253,12 @@
   \frametitle{Recouvrement de domaines}
   \centering
   \only<1>{\includegraphics[scale=0.5]{slide_overlap_1.png}\\}
-  \only<2>{\includegraphics[scale=0.5]{slide_overlap_2.png}}  
+  \only<2->{\includegraphics[scale=0.5]{slide_overlap_2.png}}
+
+  \visible<3>{\begin{itemize}
+  \item La taille du recouvrement dépend de l'ordre du schéma 
+  \item \textit{NTMIX} $\Rightarrow$ schéma d'ordre élevé
+  \end{itemize}}
 \end{frame}
 
 \begin{frame}
@@ -261,10 +268,10 @@
   \item   Utilisation d'un schéma décentré 
   \item   Réduction de l'influence des bordures internes
   \end{itemize}
-
+  \vspace{1cm}
   \centering
-  \includegraphics[scale=0.5]{slide_border_1.png}\hspace{2.5cm}
-  \includegraphics[scale=0.5]{slide_border_2.png}
+  \includegraphics[scale=0.4]{slide_border_1.png}\hspace{2.5cm}
+  \includegraphics[scale=0.4]{slide_border_2.png}
   %\footnotesize
   %\begin{subequations}
   %\begin{align*}
@@ -272,15 +279,6 @@
   %\end{align*}
   %\end{subequations}
   
-\end{frame}
-
-
-\begin{frame}
-  \begin{itemize}
-  \item Schémas moins précis
-  \item 1 communication des points de recouvrement/itération de Runge-Kutta
-  \item Couplage faible
-  \end{itemize}
 \end{frame}
 
 %\begin{frame}
@@ -312,16 +310,22 @@
 \begin{frame}
   \frametitle{Échange des points de recouvrement}
   \centering
-  \only<1>{Communications sur $x$\\}
-  \only<2>{Synchronisation\\}
-  \only<3>{Communications sur $y$\\}
-  \only<4>{État après les communications\\}
-  \only<1>{\includegraphics[scale=0.3]{slide_overlapcom_1.png}\\}
-  \only<2>{\includegraphics[scale=0.3]{slide_overlapcom_2.png}\\}
-  \only<3>{\includegraphics[scale=0.3]{slide_overlapcom_3.png}\\}
-  \only<4>{\includegraphics[scale=0.3]{slide_overlapcom_4.png}}
+  \only<1>{Communications sur $x$\\\includegraphics[scale=0.3]{slide_overlapcom_1.png}\\}
+  \only<2>{Synchronisation\\\includegraphics[scale=0.3]{slide_overlapcom_2.png}\\}
+  \only<3>{Communications sur $y$\\\includegraphics[scale=0.3]{slide_overlapcom_3.png}\\}
+  \only<4>{État après les communications\\\includegraphics[scale=0.3]{slide_overlapcom_4.png}\\}
 \end{frame}
 
+
+\begin{frame}
+  \frametitle{Bilan}
+  \begin{itemize}
+  \item Schémas moins précis sur les frontières
+  \item 1 communication des points de recouvrement/itération de Runge-Kutta
+  \item Couplage faible
+  \item Duplication du calcul des points de recouvrement
+  \end{itemize}
+\end{frame}
 
 %
 % Performances
@@ -346,8 +350,7 @@
   \end{itemize}%
   \centering
   \only<1>{\includegraphics[page=1,scale=0.8]{gnuplot/bench_strong_nemo.pdf}}
-  \only<2>{\includegraphics[page=2,scale=0.8]{gnuplot/bench_strong_nemo.pdf}}
-  
+  \only<2>{\includegraphics[page=2,scale=0.8]{gnuplot/bench_strong_nemo.pdf}} 
 \end{frame}
 
 %
@@ -360,7 +363,6 @@
   \item Version parallèle
   \item Améliorations encore possibles
     \begin{itemize}
-    \item Réduire la consommation mémoire
     \item Version hybride OpenMP + MPI
     \end{itemize}
   \end{itemize}
