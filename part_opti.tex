@@ -183,8 +183,6 @@ Comme on peut le voir sur les figures \ref{fig:bench_scal_nemo_speedup}, le spee
 
 \subsection{Performances parallèle}\label{sec:scal}
 
-Note: les mesures n'ont pas encore été réalisés au moment où le rapport doit être rendu, elle feront l'objet du dernier mois de stage.
-
 %https://www.sharcnet.ca/help/index.php/Measuring_Parallel_Scaling_Performance
 %\subsection{Scalabilité}\label{sec:scal}
 
@@ -198,18 +196,59 @@ $$E=\frac{t_1}{n\times t_n}$$ avec $t_i$ le temps d'exécution avec $i$ noeuds e
 
 
 \paragraph{Cas périodique}
-On s'intéresse ici au cas périodique, tous les processus réalisent 2 communications dans toutes les directions car le recouvrement se produit entre tous les sous-domaines comme présenté sur la figure \ref{fig:per_overlap}. 
+On s'intéresse ici au cas périodique, tous les processus réalisent 2 communications dans toutes les directions car le recouvrement se produit entre tous les sous-domaines comme présenté sur la figure \ref{fig:per_overlap}. La figure \ref{fig:strong_per} présente l'accélération en fonction du nombre de coeurs de calculs utilisés. Les points traçés (24,48,96 et 192) correspondent aux nombre de coeurs pour 1,2,4 et 8 noeuds. La courbe bleue présente l'accélération maximale théorique; l'accélération pouvant être obtenue si aucun surcoût n'était induit par la parallèlisation du code, et la courbe rouge présente l'accélération mesurée.
+
+
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[scale=0.7]{gnuplot/bench_strong_nemo.pdf}
+    \caption{\label{fig:strong_per} Accélération}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[scale=0.7,page=3]{gnuplot/bench_strong_nemo.pdf}
+    \caption{\label{fig:strong_per_time} Répartition du temps}
+  \end{subfigure}
+  \caption{\label{fig:bench_strong_per}Scalabilité forte - Cas périodique}
+\end{figure}
+
+
+On observe donc que l'accélération mesurée s'éloigne de plus en plus de l'accélération maximale théorique. Cela signifie qu'un surcoût important est induit par la version parallèle. La figure \ref{fig:strong_per_time} représente la répartition du temps pour chaque exécution de la version parallèle. On peut constater que les communications restent négligeables ($< 5\%$) mais qu'un surcoût de calcul important apparaît (en vert). Ce surcôut représente le nombre de points de recouvrement supplémentaires par rapport à la mesure réalisée sur un seul noeud. En effet, plus le domaine est découpé, plus le nombre de points de recouvrement devient important et entraîne des duplications de calculs. La courbe d'efficacité reste toujours en-dessous de la zone verte, montrant que l'accéleration (et l'efficacité) sont fortement limitées par ce surcout de calcul.
+
+
 
 
 \paragraph{Cas apériodiques}
 Dans ces cas, la quantité de données échangées par chaque processus est déséquilibrée car les bordures physiques sont traitées (fig. \ref{fig:per_overlap}). Nous étudierons donc ici les 2 méthodes de distribution des points de maillage présentées en section\ref{sec:equilibrage}.
 
-%\begin{figure}[ht]
-%  \centering
-%  \includegraphics[scale=1.0]{gnuplot/bench_strong_nemo.pdf}
-%  \caption{\label{fig:strong-nemo} }
-%\end{figure}
+\paragraph{}Nous pouvons observer sur la figure \ref{fig:strong_aper} que le même phénomène de surcoût de calcul se produit que dans le cas périodique; mais les 2 méthodes utilisées pour le découpage du domaine ont une accélération différente. En regardant la répartition du temps pour ces 2 méthodes (fig. \ref{fig:strong_aper_triv} et \ref{fig:strong_aper_const}), on peut remarquer que dans l'approche triviale (fig. \ref{fig:strong_aper_triv}), le temps passé dans les fonctions MPI est plus élevé que dans la seconde approche. En effet, dans avec la première méthode, les différentes classes de sous-domaines présentées en section \ref{sec:equilibrage} ne possédent pas le même nombre de points à traiter et les classes en possédant le moins devront atteindre celles qui en possédent le plus afin de pouvoir réaliser les communications, ce qui augmente la part de temps passé dans les fonctions \textit{MPI}. Ce problème disparaît avec la seconde approche; tous les sous-domaines ont le même nombre de points et peuvent donc commencer à réaliser les communications en même temps. La part de temps passé dans les fonctions MPI reste quand même plus élevé que dans le cas périodique du fait que certains sous-domaines réalisent moins de communications que d'autres.
 
+Cette seconde approche restera donc la version finale de NTMIX.
+
+
+\begin{figure}[!ht]
+  \centering
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=2,scale=0.51]{gnuplot/bench_strong_nemo.pdf}
+    \caption{\label{fig:strong_aper}Accélération}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=4,scale=0.7]{gnuplot/bench_strong_nemo.pdf}
+    \caption{\label{fig:strong_aper_triv}Répartition du temps - Méthode triviale}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{0.5\textwidth}
+    \centering
+    \includegraphics[page=5,scale=0.7]{gnuplot/bench_strong_nemo.pdf}
+    \caption{\label{fig:strong_aper_const}Répartition du temps - Taille constante}
+  \end{subfigure}
+  \caption{\label{fig:bench_strong_aper}Scalabilité forte - Cas apériodiques}
+\end{figure}
 
 
 

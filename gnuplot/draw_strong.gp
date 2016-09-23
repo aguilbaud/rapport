@@ -79,6 +79,8 @@ stats 'strong_per_nemo' using 0 nooutput
 #plot for [i=0:(STATS_blocks - 1)] 'strong_per_nemo' index i u 1:3 t column  w lp ls 7 lc i+1 ps 0.5
 plot for [i=0:0] 'strong_per_nemo' index i u ($1*24):5 t column  w lp ls 3 lw 3 ps 0.5, '' index i u ($1*24):1 t 'Maximal' w lp ls 1 lw 3 ps 0.5
 
+
+plot for [i=1:2] 'strong_per_nemo' index i u ($1*24):5 t column  w lp ls 3+i lw 3 ps 0.5, '' index i u ($1*24):1 t 'Maximal' w lp ls 1 lw 3 ps 0.5
 #
 # Time percentage bargraph
 #
@@ -108,10 +110,10 @@ plot 'strong_per_nemo2' using 2:xticlabel(1)  t column(2) ls 3, for [i=3:4] '' u
 
 #plot 'strong_per_nemo2_over4'  using 2:xticlabel(1)  t column(2) ls 3, for [i=3:4] '' using i:xticlabel(1) title column(i), '' using 5:xtic(1)  t col with lp ls 7 lw 2 ps 0.5 axes x1y2
 
-set title "Time repartition - Aperiodic case, 1st method\n{/*0.7 Overlap 6 - 40 time steps - 400^3}"
+set title "Time repartition - Aperiodic case, Trivial method\n{/*0.7 Overlap 6 - 40 time steps - 400^3}"
 plot 'strong_per_nemo_aper_1' using 2:xtic(1)  t column(2) ls 3, for [i=3:4] '' using i title column(i) ls i-2, '' using 5:xtic(1)  t col with lp ls 11 lw 2 ps 0.5 axes x1y2
 
-set title "Time repartition - Aperiodic case, 2nd method\n{/*0.7 Overlap 6 - 40 time steps - 400^3}"
+set title "Time repartition - Aperiodic case, Constant size method\n{/*0.7 Overlap 6 - 40 time steps - 400^3}"
 plot 'strong_per_nemo_aper_2' using 2:xtic(1)  t column(2) ls 3, for [i=3:4] '' using i title column(i) ls i-2, '' using 5:xtic(1)  t col with lp ls 11 ps 0.5 axes x1y2
 
 
