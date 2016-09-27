@@ -165,18 +165,8 @@ Sur le cluster LENOVO, le jeu d'instruction AVX2 est disponible, il permet de tr
 
 \begin{figure}[!ht]
   \centering
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    \includegraphics[scale=0.51]{gnuplot/bench_scalaire_speedup_neptune.pdf}
-  \caption{\label{fig:bench_scal_neptune_speedup}}
-  \end{subfigure}%
-  ~
-  \begin{subfigure}[b]{0.5\textwidth}
-    \centering
-    \includegraphics[scale=0.51]{gnuplot/bench_scalaire_speedup_nemo.pdf}
-  \caption{\label{fig:bench_scal_nemo_speedup}}
-  \end{subfigure}
-  \caption{\label{fig:bench_scal_speedups}Speedup finaux}
+  \includegraphics[scale=0.51]{gnuplot/bench_scalaire_speedup_nemo.pdf}
+  \caption{\label{fig:bench_scal_nemo_speedup}Accéleration - LENOVO}
 \end{figure}
 
 Comme on peut le voir sur les figures \ref{fig:bench_scal_nemo_speedup}, le speedup ($\frac{Base time}{Vectoriztion+alliasing}$) est en constante diminution au fur et à mesure que l'on augmente la taille du domaine. En utilisant \textit{valgrind} avec l'outil \textit{massif} qui permet de profiler l'usage de la mémoire d'un programme, on constate que pour une taille de maillage de $20^3$, environ 27Mo sont utilisés et pour un domaine de $30^3$, environ 48Mo. Seul le cas avec un domaine de taille 20 peut tenir entièrement dans le cache L3 d'un nœud du calculateur Lenovo (cache L3 de 30Mo), tous les cas suivants sont donc fortement dépendant des transferts de données se réalisant depuis la RAM, limitant ainsi le speedup obtenu grâce à la vectorisation.
@@ -187,11 +177,13 @@ Comme on peut le voir sur les figures \ref{fig:bench_scal_nemo_speedup}, le spee
 %\subsection{Scalabilité}\label{sec:scal}
 
 \subsubsection{Scalabilité forte}\label{sec:scal-strong}
-Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoûts induits par un programme parallèle. Pour cela, on mesure l'efficacité:
+Pour une taille de problème fixée, on augmente le nombre de processus. Dans le cas d'une application réalisant beaucoup de calculs, le but est de trouver le point auquel on obtient un temps d'exécution raisonnable mais en limitant les surcoûts induits par un programme parallèle. Pour cela, on mesure l'efficacité et/ou l'accéleration:
 
-$$E=\frac{t_1}{n\times t_n}$$ avec $t_i$ le temps d'exécution avec $i$ noeuds et $t_1$ le temps d'exécution avec un seul noeud. Plus cette valeur sera proche de 1, plus le code sera efficace.
+$$E=\frac{t_1}{n\times t_n} \qquad S=\frac{t_1}{t_n}$$ avec $t_i$ le temps d'exécution avec $i$ noeuds et $t_1$ le temps d'exécution avec un seul noeud. 
 
-\paragraph{}On recherche donc une taille de problème la plus grande possible afin de pouvoir augmenter suffisamment le nombre de noeuds. Pour cela, il faut trouver une taille de problème qui occupe le plus de mémoire possible sur un noeud. J'ai utilisée MPS (\textit{MPI Performance Snapshot}) pour mesurer la mémoire utilisée par les processus MPI lors de l'exécution de NTMIX. On trouve que pour un domaine de $400^3$ points de maillage, la mémoire utilisée est d'environ 55Go. La mémoire disponible sur un noeud du cluster LENOVO est de 64Go donc cette taille de domaine sera utilisée pour mesurer la scalabilité forte de l'application.
+Plus l'efficatcité sera proche de 1, plus le code sera efficace; de la même façon, plus l'accéleration sera proche du nombre de noeuds, plus le code sera efficace.
+
+\paragraph{}On recherche donc une taille de problème la plus grande possible afin de pouvoir augmenter suffisamment le nombre de noeuds. Pour cela, il faut trouver une taille de problème qui occupe le plus de mémoire possible sur un noeud. J'ai utilisée MPS (\textit{MPI Performance Snapshot}) pour mesurer la mémoire utilisée par les processus MPI lors de l'exécution de NTMIX. On trouve que pour un domaine de $400^3$ points de maillage, la mémoire utilisée est d'environ 55Go. La mémoire disponible sur un noeud du cluster LENOVO est de 64Go donc cette taille de domaine sera utilisée pour mesurer la scalabilité forte de l'application et éviter l'effet de swapping (copie d'un morceau de mémoire sur le disque afin de libérer de l'espace) qui ralentirait considérablement les temps d'exécution.
 
 
 
@@ -216,8 +208,14 @@ On s'intéresse ici au cas périodique, tous les processus réalisent 2 communic
 \end{figure}
 
 
-On observe donc que l'accélération mesurée s'éloigne de plus en plus de l'accélération maximale théorique. Cela signifie qu'un surcoût important est induit par la version parallèle. La figure \ref{fig:strong_per_time} représente la répartition du temps pour chaque exécution de la version parallèle. On peut constater que les communications restent négligeables ($< 5\%$) mais qu'un surcoût de calcul important apparaît (en vert). Ce surcôut représente le nombre de points de recouvrement supplémentaires par rapport à la mesure réalisée sur un seul noeud. En effet, plus le domaine est découpé, plus le nombre de points de recouvrement devient important et entraîne des duplications de calculs. La courbe d'efficacité reste toujours en-dessous de la zone verte, montrant que l'accéleration (et l'efficacité) sont fortement limitées par ce surcout de calcul.
+On observe donc que l'accélération mesurée s'éloigne de plus en plus de l'accélération maximale théorique. Cela signifie qu'un surcoût important est induit par la version parallèle. La figure \ref{fig:strong_per_time} représente la répartition du temps pour chaque exécution de la version parallèle. On peut constater que les communications restent négligeables ($< 5\%$) mais qu'un surcoût de calcul important apparaît (en vert). Ce surcôut représente le nombre de points de recouvrement supplémentaires par rapport à la mesure réalisée sur un seul noeud. En effet, plus le domaine est découpé, plus le nombre de points de recouvrement devient important (représenté sur le figure \ref{fig:overlap_points}) et entraîne des duplications de calculs. La courbe d'efficacité (fig. \ref{fig:strong_per_time}) reste toujours en-dessous de la zone verte, montrant que l'accéleration (et l'efficacité) sont fortement limitées par ce surcout de calcul.
 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.8]{gnuplot/overlap_points.pdf}
+  \caption{\label{fig:overlap_points} Portion de points de recouvrement selon le nombre de processus}
+\end{figure}
 
 
 
@@ -226,7 +224,6 @@ Dans ces cas, la quantité de données échangées par chaque processus est dés
 
 \paragraph{}Nous pouvons observer sur la figure \ref{fig:strong_aper} que le même phénomène de surcoût de calcul se produit que dans le cas périodique; mais les 2 méthodes utilisées pour le découpage du domaine ont une accélération différente. En regardant la répartition du temps pour ces 2 méthodes (fig. \ref{fig:strong_aper_triv} et \ref{fig:strong_aper_const}), on peut remarquer que dans l'approche triviale (fig. \ref{fig:strong_aper_triv}), le temps passé dans les fonctions MPI est plus élevé que dans la seconde approche. En effet, dans avec la première méthode, les différentes classes de sous-domaines présentées en section \ref{sec:equilibrage} ne possédent pas le même nombre de points à traiter et les classes en possédant le moins devront atteindre celles qui en possédent le plus afin de pouvoir réaliser les communications, ce qui augmente la part de temps passé dans les fonctions \textit{MPI}. Ce problème disparaît avec la seconde approche; tous les sous-domaines ont le même nombre de points et peuvent donc commencer à réaliser les communications en même temps. La part de temps passé dans les fonctions MPI reste quand même plus élevé que dans le cas périodique du fait que certains sous-domaines réalisent moins de communications que d'autres.
 
-Cette seconde approche restera donc la version finale de NTMIX.
 
 
 \begin{figure}[!ht]
@@ -251,13 +248,34 @@ Cette seconde approche restera donc la version finale de NTMIX.
 \end{figure}
 
 
+\paragraph{Influence de la bande passante}
+Lorsqu'on mesure le temps par points par itération sur chacun des sous-domaines, il est treès formtement supérieur à celui mesuré sur la version séquentielle (environ un ordre de grandeur plus grand). Comme ce temps n'est pas censé augmenter lorsque l'on ajoute des processus, j'ai mesuré le comportement de cette métrique (fig. \ref{fig:tpp_par}). J'ai augmenté progressivement le nombre de processus au sein d'un noeud de calcul et on observe que le temps obtenu avec 2 coeurs est semblable à celui obtenu dans la version séquentielle mais qu'il augmente très rapidement avec 24 processus sur un noeud(par un facteur 2). J'ai comparer ce comportement en plaçant cette fois-ci la moitié des processus sur un noeud et l'autre moitié sur un second noeud. On observe que le temps par points augmente moins rapidement. Il semblerai donc qu'on soit ici limité par la bande passante mémoire d'un noeud; ceci peut être dû aux algorithmes utilisés qui n'optimisent pas leurs accés mémoire, produisant donc beaucoup de défaut de cache. Il est cependant compliqué d'en trouver la cause exacte.
+
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.7]{gnuplot/tpp.pdf}
+  \caption{\label{fig:tpp_par} Temps par points par itération - Placement de processus}
+\end{figure}
 
 
 \subsubsection{Scalabilité faible}\label{sec:scal-weak}
-Dans ce cas, la taille du problème assignée à chaque processus reste constante et on ajoute des processeurs dans le but d'augmenter la taille globale du problème. Étant donné que le motif de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales (ici les opérations de reduce pour le calcul du pas de temps maximal).
+Dans ce cas, la taille du problème assigné à chaque processus reste constante et on ajoute des noeuds dans le but d'augmenter la taille globale du problème. Étant donné que le motif de communication ne change pas (chaque processus communique avec ses voisins directs), le but est de mettre en évidence le coût des communications globales.
+
+\paragraph{}Ici, la taille du problème assigné à chaque processus est de $140^3$, ce qui permet d'éviter de saturer la \textit{RAM} d'un noeud de calcul. Comme pour la scalabilité forte, on mesure le temps d'exécution sur différents nombre de noeuds et on calcul ensuite l'efficacité:
 
 
 $$E=\frac{t_1}{t_i}$$ avec $t_i$ le temps d'exécution avec $i$ processus.
+
+
+\paragraph{}On peut voir sur la courbe de la figure \ref{fig:weak_scaling} que l'efficacité reste égale à 1 jusqu'à 15 noeuds (360 processus). Cela signifie que les communications globales sont négligeables à l'echelle de la simulation. La seule communication globale présente dans la version parallèle est un \textit{reduce}; opération permettant de trouver un minimum sur l'ensemble des processus et de le redistribuer à tous les processus (utilisée pour le calcul du pas de temps).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.8]{gnuplot/bench_weak_nemo.pdf}
+  \caption{\label{fig:weak_scaling} Scalabilité faible}
+\end{figure}
+
 
 
 %http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=D9B131203AACF6CB76730F3678DE81ED?doi=10.1.1.49.3513&rep=rep1&type=pdf

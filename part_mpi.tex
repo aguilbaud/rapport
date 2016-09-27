@@ -327,25 +327,15 @@ Cependant, ces découpages ne prennent pas en compte les communications réalis�
 Comme vu dans la section \ref{sec:numerical_dom_decompo} le calcul des gradients est dépendant de l'ensemble du domaine. Pour s'assurer de l'exactitude des résultats obtenus dans cette version MPI, j'ai donc utilisé un overlapping assez grand permettant d'obtenir une précision numérique suffisante. J'ai ensuite calculer les valeurs moyennes des champs de la solution afin de les comparer avec ceux obtenus avec la version séquentielle du programme (\ref{sec:3D-validation}).
 
 
- \paragraph{}Afin d'étudier la précision de la version parallèle de NTMIX, plusieurs cas de référence ont été exécutés avec la version séquentielle tridimensionnelle en fixant un pas de temps unique. Les mêmes cas tests ont ensuite été réalisés avec la version parallèle, en gardant ce même pas de temps. Cette méthode permet ensuite de mesurer l'erreur moyenne en fonction du nombre de points de recouvrement à l'aide de la formule:
+ \paragraph{}Afin d'étudier la précision de la version parallèle de NTMIX, plusieurs cas de référence ont été exécutés avec la version séquentielle tridimensionnelle en fixant un pas de temps unique. Les mêmes cas tests ont ensuite été réalisés avec la version parallèle, en gardant ce même pas de temps. Grâce à \textit{Ensight}, il est ensuite possible de calculer la différence entre 2 champs différents permettent de mettre en évidence les erreurs de calculs 
 
-$$ \sqrt{\sum_{i=1}^{n} \frac{({u_p}_i-{u_{ref}}_i)^2}{({u_{ref}}_i)^2}} $$
 
-avec:
-\begin{itemize}
-\item ${u_p}_i$ la valeur du champ $u$ au point $i$ pour la version parallèle
-\item ${u_{ref}}_i$ la valeur du champ $u$ au point $i$ pour la version séquentielle
-\end{itemize}
-%\begin{table}[!ht]
-%  \begin{center}
-%    \begin{tabular}{|c|c|c||c|c|c|c||c|c|c|}
-%      \hline
-%      Overlap & 12 & 11 \\
-%      \hline
-%      Mean error & 10E-14 & 10E-10 \\
-%      \hline
-%    
-%    \end{tabular}
-%    \caption{\label{arr:valid_overlap} Résultats obtenus}
-%  \end{center}
-%\end{table}
+% Cette méthode permet ensuite de mesurer l'erreur moyenne en fonction du nombre de points de recouvrement à l'aide de la formule:
+%
+%$$ \sqrt{\sum_{i=1}^{n} \frac{({u_p}_i-{u_{ref}}_i)^2}{({u_{ref}}_i)^2}} $$
+%
+%avec:
+%\begin{itemize}
+%\item ${u_p}_i$ la valeur du champ $u$ au point $i$ pour la version parallèle
+%\item ${u_{ref}}_i$ la valeur du champ $u$ au point $i$ pour la version séquentielle
+%\end{itemize}

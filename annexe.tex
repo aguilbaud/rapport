@@ -57,9 +57,15 @@ Cette annexe présente les résultats obtenus par la méthode décrite en sectio
     \includegraphics[page=3,scale=0.51]{gnuplot/bench_scalaire_neptune.pdf}
   \caption{\label{fig:bench_scal_neptune_per}}
   \end{subfigure}
-  \caption{\label{fig:bench_scal_neptune}Temps par points des cas tests - BULL}
+  \caption{\label{fig:bench_scal_neptune}Temps par points des cas tests - BULLX}
 \end{figure}
 
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.51]{gnuplot/bench_scalaire_speedup_neptune.pdf}
+  \caption{\label{fig:bench_scal_neptune_speedup} Accéleration - BULLX}
+\end{figure}
 
 %\section{Modifications du traitements des bordures}
 %LEs subroutines bc\_x, bc\_y et bc\_z stockaient les plans des bordures selon leur directions respectives. Dans le cas parallèle, un processus ne possédent pas forcément les 2 plans frontières. Ces routines ont donc été modifiées avent de traiter un seul plan et ce grace un argument qui y a été rajouté.
